@@ -1,3 +1,9 @@
 # oadr30
-OpenADR 3.0 Python Package
-Reference implementation for a VEN
+
+OpenADR 3.0 VEN Implementation
+
+Use pip to install:
+
+```bash
+pip install oadr30
+
