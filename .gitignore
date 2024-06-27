@@ -1,0 +1,6 @@
+__pycache__/
+__pycache__/*
+oadr30.egg-info/
+oadr30.egg-info/*
+oadr30/__pycache__/
+oadr30/__pycache__/*

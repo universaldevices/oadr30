@@ -2,6 +2,7 @@
 #MIT License
 
 import json
+from .log import Oadr3LoggedException
 
 '''
 This class represents an openADR program. 
@@ -42,7 +43,7 @@ class Program(dict):
     '''
     def __init__(self, programName:str, programId: str, *args, **kwargs):
         if programName == None or programId == None:
-            raise Exception("A program needs both programName and ProgramId")
+            raise Oadr3LoggedException('critical', "A program needs both programName and ProgramId", True)
         try:
             # Default elements
             default_elements = {
@@ -58,7 +59,7 @@ class Program(dict):
             # Update the dict with any additional keyword arguments
             self.update(kwargs)
         except Exception as ex:
-            print (str(ex))
+            raise Oadr3LoggedException('critical', "exception in Program Init", True)
 
     def toJson(self)->str:
         return json.dumps(self)

@@ -261,6 +261,52 @@ Combination of all events
 oadr3_event_types = oadr3_reg_event_types | oadr3_alert_types | oadr3_cta2045_types
 
 '''
+    These labels are qualifiers to report name labels, to indicate the nature of the reported value.
+    DIRECT_READ is the default, if the qualifier is absent. Note that these apply to the data source in
+    general, not to specific intervals.
+'''
+oadr3_report_reading_types = {
+    'DIRECT_READ':
+    {
+        'data_type': float,
+        'desc': 'Payload values have been determined by direct measurement from a resource.'
+    },
+    'ESTIMATED':
+    {
+        'data_type': float,
+        'desc': 'Payload value is an estimate where no Direct Read was available for the interval, but sufficient other data exist to make a reasonable estimate.'
+    }, 
+    'SUMMED':
+    {
+        'data_type': float,
+        'desc': 'Payload value is the sum of multiple data sources.',
+    },
+    'MEAN': 
+    {
+        'data_type': float,
+        'desc': 'Payload value represents the mean measurements over an interval.',
+
+    },
+    'PEAK': 
+    {
+        'data_type': float,
+        'desc': 'Payload value represents the highest measurement over an interval.',
+
+    },
+    'FORECAST':
+    {
+        'data_type': float,
+        'desc': 'Payload value is a forecast of future values, not a measurement or estimate of actual data.',
+    } ,
+    'AVERAGE':
+    {
+
+        'desc': 'Payload value represents the average of measurements over an interval.',
+        'data_type': float,
+    }
+}
+
+'''
     The following enumerations may be assigned to the payloadType attribute of a payload included in an
     interval included in a report.
 '''
@@ -293,7 +339,7 @@ oadr3_report_types = {
     },
     'OPERATING_STATE': 
     { 
-        'data_type': any,
+        'data_type': oadr3_report_reading_types,
         'desc':'Payload values array includes a list of operating state enumerations, see definitin.'
     },
     'UP_REGULATION_AVAILABLE':
@@ -390,51 +436,6 @@ oadr3_report_types = {
     }
 }
 
-'''
-    These labels are qualifiers to report name labels, to indicate the nature of the reported value.
-    DIRECT_READ is the default, if the qualifier is absent. Note that these apply to the data source in
-    general, not to specific intervals.
-'''
-oadr3_report_reading_types = {
-    'DIRECT_READ':
-    {
-        'data_type': float,
-        'desc': 'Payload values have been determined by direct measurement from a resource.'
-    },
-    'ESTIMATED':
-    {
-        'data_type': float,
-        'desc': 'Payload value is an estimate where no Direct Read was available for the interval, but sufficient other data exist to make a reasonable estimate.'
-    }, 
-    'SUMMED':
-    {
-        'data_type': float,
-        'desc': 'Payload value is the sum of multiple data sources.',
-    },
-    'MEAN': 
-    {
-        'data_type': float,
-        'desc': 'Payload value represents the mean measurements over an interval.',
-
-    },
-    'PEAK': 
-    {
-        'data_type': float,
-        'desc': 'Payload value represents the highest measurement over an interval.',
-
-    },
-    'FORECAST':
-    {
-        'data_type': float,
-        'desc': 'Payload value is a forecast of future values, not a measurement or estimate of actual data.',
-    } ,
-    'AVERAGE':
-    {
-
-        'desc': 'Payload value represents the average of measurements over an interval.',
-        'data_type': float,
-    }
-}
 
 '''
     These definitions characterize the operating state of a resource under control of a VEN
