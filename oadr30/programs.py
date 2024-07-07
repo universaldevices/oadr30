@@ -38,28 +38,32 @@ Mandatory properties are programName and id. The rest seem to be optional and ar
         retailerLongName: ACME Electric Inc.
 '''
 class Program(dict):
+
     '''
-        Provide the programName and Id. Optionally, provide additional properties in the form of name: value pairs
+      Initialize using the json received from the VTN
     '''
-    def __init__(self, programName:str, programId: str, *args, **kwargs):
-        if programName == None or programId == None:
-            raise Oadr3LoggedException('critical', "A program needs both programName and ProgramId", True)
-        try:
-            # Default elements
-            default_elements = {
-                'id': programId,
-                'programName': programName,
-                'country': 'US',
-                'programType': 'PRICING_TARIFF',
-            }
-            
-            # Initialize the dict with default elements
-            super().__init__(default_elements, *args, **kwargs)
-            
-            # Update the dict with any additional keyword arguments
-            self.update(kwargs)
-        except Exception as ex:
-            raise Oadr3LoggedException('critical', "exception in Program Init", True)
+    def __init__(self, json_data:str):
+      try:
+        super().__init__(json_data)
+      except Exception as ex:
+        raise Oadr3LoggedException('critical', "exception in Program Init-json", True)
 
     def toJson(self)->str:
         return json.dumps(self)
+
+'''
+An array of programs
+'''
+class Programs(list):
+
+  def __init__(self, json_data:str):
+    try:
+      for program in json_data:
+        super().append(Program(program))
+
+    except Exception as ex:
+       raise Oadr3LoggedException('critical', "exception in Programs Init", True)
+  
+  def num_programs(self):
+    return len(self)
+

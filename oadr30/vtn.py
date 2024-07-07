@@ -1,6 +1,8 @@
 #Universal Devices
 #MIT License
 from .log import Oadr3LoggedException, oadr3_log_critical, oadr3_log_error
+from .programs import Programs, Program
+from .events import Events, Event
 import requests
 import json
 from datetime import datetime, timedelta
@@ -90,7 +92,7 @@ class VTNOps():
         access_token = self.token['access_token']
         return {'accept': 'application/json', 'Authorization': f'Bearer {access_token}'}
 
-    def __send_request__(self, method:Literal['POST', 'PUT', 'GET', 'DELETE'], url:str, body:str):
+    def __send_request__(self, method:Literal['POST', 'PUT', 'GET', 'DELETE'], url:str, body:str=None):
         if url == None or method == None:
             oadr3_log_error("url and method are mandatory ....", False)
             return None
@@ -119,26 +121,49 @@ class VTNOps():
                 return None
 
             if response == None or response.status_code != 200:
-                oadr3_log_error(f"failed executing {method} on {url}....", False)
+                oadr3_log_error(f"[status code = {response.status_code} : failed executing {method} on {url},  {response.json()}....", False)
 
             return response
         except Exception as ex:
             oadr3_log_critical(f"failed sending {method} request to {url} ....")
             return None
-        
-    def get_programs(self):
-        '''
-            returns all programs 
-        '''
-        return None
 
-    def get_program(self, program_id:str):
+    '''
+    '''        
+    def get_programs(self, program_id:str=None):
         '''
-            returns a specific program
+            returns an array of all programs 
         '''
+        try:
+            url = self.base_url + OADR3_PROGRAM_BASE_URL
+            if program_id:
+                url = f"{url}/{program_id}"
+            response = self.__send_request__('GET', self.base_url + OADR3_PROGRAM_BASE_URL )
+            if response.status_code != 200:
+                oadr3_log_error(f"failed getting programs: {response.error}")
+                return None
+            programs = Programs(response.json())
+            return programs
+        except Exception as ex:
+            oadr3_log_critical(f"failed getting programs ....")
+            return None
 
-    def get_events(self, program_id:str):
+    def get_events(self, program_id:str=None):
         '''
             returns all events for the given program_id
         '''
+        try:
+            url = self.base_url + OADR3_EVENT_BASE_URL
+            if program_id:
+                url = f"{url}?programID={program_id}"
+
+            response = self.__send_request__('GET', url) 
+            if response.status_code != 200:
+                oadr3_log_error(f"failed getting programs: {response.error}")
+                return None
+            events = Events(response.json())
+            return events
+        except Exception as ex:
+            oadr3_log_critical(f"failed getting programs ....")
+            return None
 

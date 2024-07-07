@@ -80,28 +80,31 @@ event:
           items:
             $ref: '#/components/schemas/interval'
 '''
+
 class Event(dict):
+    '''
+      Initialize using the json received from the VTN
+    '''
+    def __init__(self, json_data:str):
+      try:
+        super().__init__(json_data)
+      except Exception as ex:
+        raise Oadr3LoggedException('critical', "exception in Event Init-json", True)
 
-    def __init__(self, eventId:str, programId:str, intervals:[Interval], *args, **kwargs):
-        if programId == None or eventId == None or intervals == None:
-            raise Oadr3LoggedException('critical', "error: event requires programId, eventId, and intervals", True)
+    def toJson(self)->str:
+        return json.dumps(self)
 
-            try:
+class Events(list):
+  '''
+    An array of events
+  '''
+  def __init__(self, json_data:str):
+    try:
+      for event in json_data:
+        super().append(Event(event))
 
-                # Default elements
-                default_elements = {
-                    'id': eventId,
-                    'programID': programId,
-                }
-                
-                # Initialize the dict with default elements
-                super().__init__(default_elements, *args, **kwargs)
+    except Exception as ex:
+       raise Oadr3LoggedException('critical', "exception in Events Init", True)
 
-                # Update the dict with any additional keyword arguments
-                self.update(kwargs)
-
-                if self.get("intervals") == None:
-                    raise Oadr3LoggedException('critical',"event must have an interval ...")
-            
-            except Exception as ex:
-                oadr3_log_critical(f"exception in event init {ex}")
+  def num_events(self):
+    return len(self)
