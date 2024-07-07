@@ -3,6 +3,7 @@
 from .log import Oadr3LoggedException, oadr3_log_critical, oadr3_log_error
 from .programs import Programs, Program
 from .events import Events, Event
+from .ven import VEN
 import requests
 import json
 from datetime import datetime, timedelta
@@ -10,6 +11,7 @@ from typing import Literal
 
 OADR3_EVENT_BASE_URL = '/events'
 OADR3_PROGRAM_BASE_URL = '/programs'
+OADR3_VEN_BASE_URL = '/vens'
 OADR3_AUTH_URL = '/auth/token'
 
 class VTNOps():
@@ -86,11 +88,16 @@ class VTNOps():
             self.__refresh_token__()
         return self.token
 
-    def __get_default_headers(self):
+    def __get_default_headers(self, method:str):
         if self.__get_token__() == None:
             return None
         access_token = self.token['access_token']
-        return {'accept': 'application/json', 'Authorization': f'Bearer {access_token}'}
+
+        headers = {'accept': 'application/json', 'Authorization': f'Bearer {access_token}'}
+        if method == 'POST' or method == 'PUT':
+            headers['Content-Type'] = 'application/json'
+
+        return headers
 
     def __send_request__(self, method:Literal['POST', 'PUT', 'GET', 'DELETE'], url:str, body:str=None):
         if url == None or method == None:
@@ -101,7 +108,7 @@ class VTNOps():
             oadr3_log_error("for post and put, body is mandatory ....", False)
             return None
 
-        headers = self.__get_default_headers()
+        headers = self.__get_default_headers(method)
         if headers == None:
             oadr3_log_error("failed getting headers ....", False)
             return None
@@ -128,24 +135,55 @@ class VTNOps():
             oadr3_log_critical(f"failed sending {method} request to {url} ....")
             return None
 
-    '''
-    '''        
-    def get_programs(self, program_id:str=None):
+    def create_ven(self, name:str):
+        '''
+            Creates a VEN using the given name (venName)
+        '''
+        try:
+           payload = VEN.create_ven_request_payload(name)
+           url = self.base_url + OADR3_VEN_BASE_URL
+           response = self.__send_request__('POST', url, payload) 
+           if response.status_code != 200:
+                oadr3_log_error(f"failed creating VEN ...")
+                return None
+           ven = VEN(response.json())
+           return ven
+        except Exception as x:
+            oadr3_log_critical(f"failed creating ven {name}", True)
+            return False
+
+
+    def get_programs(self):
         '''
             returns an array of all programs 
         '''
         try:
             url = self.base_url + OADR3_PROGRAM_BASE_URL
-            if program_id:
-                url = f"{url}/{program_id}"
-            response = self.__send_request__('GET', self.base_url + OADR3_PROGRAM_BASE_URL )
+            response = self.__send_request__('GET', url) 
             if response.status_code != 200:
-                oadr3_log_error(f"failed getting programs: {response.error}")
+                oadr3_log_error(f"failed getting programs ...")
                 return None
             programs = Programs(response.json())
             return programs
         except Exception as ex:
             oadr3_log_critical(f"failed getting programs ....")
+            return None
+
+    def get_program(self, program_id:str=None):
+        '''
+            returns a specific program
+        '''
+        try:
+            url = self.base_url + OADR3_PROGRAM_BASE_URL
+            url = f"{url}/{program_id}"
+            response = self.__send_request__('GET', url) 
+            if response.status_code != 200:
+                oadr3_log_error(f"failed getting program {program_id}")
+                return None
+            program = Program(response.json())
+            return program
+        except Exception as ex:
+            oadr3_log_critical(f"failed getting program ....")
             return None
 
     def get_events(self, program_id:str=None):
@@ -159,7 +197,7 @@ class VTNOps():
 
             response = self.__send_request__('GET', url) 
             if response.status_code != 200:
-                oadr3_log_error(f"failed getting programs: {response.error}")
+                oadr3_log_error(f"failed getting events ...")
                 return None
             events = Events(response.json())
             return events

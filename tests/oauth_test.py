@@ -24,10 +24,11 @@ client_secret="999"
 def main():
     try:
         vtn = VTNOps(base_url=base_url, auth_url=auth_url, client_id=client_id, client_secret=client_secret, auth_token_url_is_json=True )
+        vtn.create_ven("crap")
 #        vtn.get_programs()
-#        vtn.get_programs('0')
+#        vtn.get_program('0')
 #        vtn.get_events()
-        vtn.get_events('0')
+#        vtn.get_events('0')
       #  vtn.__get_token__()
       #  vtn.__send_request__('POST', url='https://dev.isy.io/api/unsubscribe', body='email=crap@crap.com')
 
