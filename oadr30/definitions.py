@@ -1,4 +1,5 @@
 #This file defines all the OpenADR3 definitions and enumerations
+from .log import oadr3_log_critical
 
 
 '''
@@ -63,13 +64,13 @@ oadr3_reg_event_types = {
     },
     'CURVE' : 
     {
-        'data_type': [],  
+        'data_type': list,  
         'desc': "Payload values array contains a series of one or more pairs of floats\
         representing a 2D point. Note: May be used to represent a curve of values, e.g. VoltVar values."
     },
     'OLS' :
     {
-        'data_type': [], 
+        'data_type': list, 
         'desc': "Optimum Load Shape. Payload values array contains a list of values\
         0.0 to 1.0 representing percentage of usage over the set of intervals in\
         the event.  Note: See ANSI-SCTE 267 "

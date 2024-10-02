@@ -3,7 +3,7 @@
 import json
 from .log import Oadr3LoggedException, oadr3_log_critical
 from .descriptors import EventPayloadDescriptor, ReportPayloadDescriptor
-from .common import Interval, IntervalPeriod
+from .interval import Interval, IntervalPeriod
 
 
 
@@ -100,7 +100,7 @@ class Event(dict):
       except Exception as ex:
         return None
 
-    def getEventPayloadDescriptors(self)->[]:
+    def getEventPayloadDescriptors(self)->list:
       try:
         out=[]
         for pd in self['payloadDescriptors']:
@@ -109,12 +109,12 @@ class Event(dict):
       except Exception as ex:
         return None
 
-    def getIntervals(self)->[]:
+    def getIntervals(self)->list:
       try:
-        out=[]
+        intervals=[]
         for intrv in self['intervals']:
-          out.append(Event(intrv))
-        return out
+          intervals.append(Interval(intrv, self.getIntervalPeriod(), self.getEventPayloadDescriptors()))
+        return intervals
       except Exception as ex:
         return None
 
@@ -124,13 +124,19 @@ class Events(list):
     An array of events
   '''
   def __init__(self, json_data):
+
+    self.event_buckets={} #bucket based on payload type
     try:
       if 'createdDateTime' in json_data:
         # we do not have an arry. It's just one stupid element 
         event = Event(json_data)
         d = event.getEventPayloadDescriptors()
         i = event.getIntervalPeriod()
-        isi = event.getIntervals()
+        intervals = event.getIntervals()
+        for interval in intervals:
+          ip = interval.getIntervalPeriod()
+          values = interval.getValues()
+
         super().append(Event(json_data))
       else:
         for event in json_data:

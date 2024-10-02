@@ -3,7 +3,7 @@
 import json
 from .log import Oadr3LoggedException, oadr3_log_critical
 from .descriptors import EventPayloadDescriptor, ReportPayloadDescriptor
-from .common import Interval
+from .interval import Interval
 
 
 
