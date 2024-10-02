@@ -3,7 +3,7 @@
 import json
 from .log import Oadr3LoggedException, oadr3_log_critical
 from .descriptors import EventPayloadDescriptor, ReportPayloadDescriptor
-from .common import Interval
+from .common import Interval, IntervalPeriod
 
 
 
@@ -85,7 +85,7 @@ class Event(dict):
     '''
       Initialize using the json received from the VTN
     '''
-    def __init__(self, json_data:str):
+    def __init__(self, json_data):
       try:
         super().__init__(json_data)
       except Exception as ex:
@@ -94,14 +94,47 @@ class Event(dict):
     def toJson(self)->str:
         return json.dumps(self)
 
+    def getIntervalPeriod(self)->IntervalPeriod:
+      try:
+        return IntervalPeriod(self['intervalPeriod'])
+      except Exception as ex:
+        return None
+
+    def getEventPayloadDescriptors(self)->[]:
+      try:
+        out=[]
+        for pd in self['payloadDescriptors']:
+          out.append(EventPayloadDescriptor(pd))
+        return out
+      except Exception as ex:
+        return None
+
+    def getIntervals(self)->[]:
+      try:
+        out=[]
+        for intrv in self['intervals']:
+          out.append(Event(intrv))
+        return out
+      except Exception as ex:
+        return None
+
+
 class Events(list):
   '''
     An array of events
   '''
-  def __init__(self, json_data:str):
+  def __init__(self, json_data):
     try:
-      for event in json_data:
-        super().append(Event(event))
+      if 'createdDateTime' in json_data:
+        # we do not have an arry. It's just one stupid element 
+        event = Event(json_data)
+        d = event.getEventPayloadDescriptors()
+        i = event.getIntervalPeriod()
+        isi = event.getIntervals()
+        super().append(Event(json_data))
+      else:
+        for event in json_data:
+          super().append(Event(event))
 
     except Exception as ex:
        raise Oadr3LoggedException('critical', "exception in Events Init", True)

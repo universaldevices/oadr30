@@ -8,6 +8,7 @@ from .log import oadr3_logger, oadr3_log_critical, oadr3_log_debug, oadr3_log_er
 from .descriptors import EventPayloadDescriptor, ReportPayloadDescriptor
 from .common import Interval, IntervalPeriod, ValueMap, Point
 from .programs import Program
+from .price_server_client import PriceServerClient
 from .events import Event
 
 

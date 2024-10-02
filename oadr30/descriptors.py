@@ -4,34 +4,42 @@
 from .common import validate_string
 from .log import Oadr3LoggedException
 
-class EventPayloadDescriptor:
+class EventPayloadDescriptor(dict):
     """
     Contextual information used to interpret event valuesMap values.
     E.g. a PRICE payload simply contains a price value, an
     associated descriptor provides necessary context such as units and currency.
     """
-    def __init__(self, payloadType:str, units=None, currency=None):
-        if not validate_string(payloadType, 128):
-            raise Oadr3LoggedException('error', "payloadType must be a string between 1 and 128 characters", True)
-        
-        self.payloadType = payloadType
-        self.units = units
-        self.currency = currency
-
+    def __init__(self, json_data):
+        try:
+            super().__init__(json_data)
+            if not validate_string(self['payloadType'], 128):
+                raise Oadr3LoggedException('error', "payloadType must be a string between 1 and 128 characters", True)
+        except Exception as ex:
+            raise Oadr3LoggedException('critical', "exception in EventPayloadDescriptor Init", True)
 
     def getPayloadType(self)->str:
-        return self.payloadType
+        try:
+            return self['payloadType']
+        except Exception as ex:
+            return None
 
     def getUnits(self)->str:
-        return self.units
+        try:
+            return self['units']
+        except Exception as ex:
+            return None
 
     def getCurrency(self)->str:
-        return self.currency
+        try:
+            return self['currency']
+        except Exception as ex:
+            return None
     
     def __str__(self):
         return (f"EventPayloadDescriptor("
-                f"payloadType={self.payloadType}, units={self.units}, "
-                f"currency={self.currency})")
+                f"payloadType={self.getPayloadType()}, units={self.getUnits()}, "
+                f"currency={self.getCurrency()})")
 
 class ReportPayloadDescriptor:
     """

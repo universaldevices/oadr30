@@ -202,6 +202,6 @@ class VTNOps():
             events = Events(response.json())
             return events
         except Exception as ex:
-            oadr3_log_critical(f"failed getting programs ....")
+            oadr3_log_critical(f"failed getting events ....")
             return None
 

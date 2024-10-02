@@ -51,7 +51,7 @@ class Point:
         """
         return f"Point(x={self.x}, y={self.y})"
 
-class ValueMap:
+class ValueMap(dict):
     """
     Represents one or more values associated with a type.
     For example, a type of "PRICE" contains a single float value.
@@ -62,7 +62,8 @@ class ValueMap:
         most often a singular value such as a price.
     """
 
-    def __init__(self, valueType: str, values: List[Union[float, int, str, bool, Point]]):
+    #def __init__(self, valueType: str, values: List[Union[float, int, str, bool, Point]]):
+    def __init__(self, json_data):
         """
         Initializes the ValuesMap with a type and associated values.
 
@@ -70,67 +71,130 @@ class ValueMap:
             valueType (str): The nature of the values, such as "PRICE".
             values (List[Union[float, int, str, bool, Point]]): The values associated with the type.
         """
-        if not (1 <= len(valueType) <= 128):
-            raise ValueError("value_type must be between 1 and 128 characters")
-        
-        self.valueType = valueType
-        self.values = values
+        try:
+            super.__init__(jason_data)
+            #if not (1 <= len(self['valueType']) <= 128):
+            #    raise ValueError("valueType must be between 1 and 128 characters")
+            #if self['valueType'] not in ['float', 'int', 'str', 'bool', 'Point']:
+            #    raise ValueError("valueType must be one of float, int, str, bool, or Point") 
+        except Exception as ex:
+            oadr3_log_critical(f"exception in ValueMap:__init__: {ex}", True)
 
     def getValueType(self)->str:
-        return self.value_type
+        try:
+            return self['valueType']
+        except Exception as ex:
+            return 'float'
 
     def getValues(self)->List:
-        return self.values
+        try:
+            return self['values']
+        except Exception as ex:
+            return []
 
     def __str__(self):
         return f"ValuesMap(valueType={self.valueType}, values={self.values})"
 
-class IntervalPeriod:
+class IntervalPeriod(dict):
     """
     Defines temporal aspects of intervals.
     A duration of default PT0S indicates instantaneous or infinity, depending on payloadType.
     A randomizeStart of default null indicates no randomization.
     """
-    def __init__(self, start, duration=None, randomizeStart=None):
-        if not isinstance(start, str):
-            raise ValueError("start must be a string in dateTime format")
-        
-        if duration is not None and not isinstance(duration, str):
-            raise ValueError("duration must be a string in duration format or None")
-        
-        if randomizeStart is not None and not isinstance(randomizeStart, str):
-            raise ValueError("randomizeStart must be a string in duration format or None")
-        
-        self.start = start
-        self.duration = duration
-        self.randomizeStart = randomizeStart
-    
-    def __repr__(self):
-        return (f"IntervalPeriod(start={self.start}, duration={self.duration}, "
-                f"randomizeStart={self.randomizeStart})")
+    def __init__(self, json_data):
+        try:
+            super().__init__(json_data)
+            if 'start' in self:
+                if self['start'] is None or not isinstance(self['start'], str):
+                    raise ValueError("start must be a string in time format or None")
+            if 'duration' in self:
+                if self['duration'] is not None and not isinstance(self['duration'], str):
+                    raise ValueError("duration must be a string in duration format or None")
+            if 'randomizedStart' in self: 
+                if self['randomizeStart'] is not None and not isinstance(self['randomizeStart'], str):
+                    raise ValueError("randomizeStart must be a string in duration format or None")
+        except Exception as ex:
+            oadr3_log_critical(f"exception in IntervalPeriod:__init__: {ex}", True)
 
-class Interval:
+    def getStartTime(self):
+        try:
+            return self['start']
+        except Exception as ex:
+            return None
+
+    def getDuration(self):
+        try:
+            return self['duration']
+        except Exception as ex:
+            return None
+
+    def getRandomizedStart(self):
+        try:
+            return self['randomizedStart']
+        except Exception as ex:
+            return None
+        
+#    def __repr__(self):
+#        return (f"IntervalPeriod(start={self.start}, duration={self.duration}, "
+#       f"randomizeStart={self.randomizeStart})")
+
+class EventPayload(dict):
+    """
+        defines the actual payload inside an interval.
+    """
+    def __init__(self, json_data):
+        try:
+            super.__init__(json_data)
+        except Exception as ex:
+            oadr3_log_critical(f"exception in EventPayload:__init__: {ex}", True)
+    
+    def getPayloadType(self):
+        try:
+            return self['payloadType']
+        except Exception as ex:
+            return None
+
+    def getValueType(self)->str:
+        try:
+            return self['valueType']
+        except Exception as ex:
+            return 'float'
+
+    def getValues(self)->List:
+        try:
+            return self['values']
+        except Exception as ex:
+            return []
+
+class Interval(dict):
     """
     An object defining a temporal window and a list of valuesMaps.
     If intervalPeriod is present, it may set temporal aspects of the interval or override event.intervalPeriod.
     """
-    def __init__(self, id, payloads:ValueMap, intervalPeriod:IntervalPeriod=None):
-        if not isinstance(id, int):
-            raise ValueError("id must be an integer")
-        
-        if not isinstance(payloads, ValueMap):
-            raise ValueError("payloads must be a list")
-        
-        if intervalPeriod is not None and not isinstance(intervalPeriod, IntervalPeriod):
-            raise ValueError("intervalPeriod must be a dictionary or None")
-        
-        self.id = id
-        self.intervalPeriod = intervalPeriod
-        self.payloads = payloads
+    def __init__(self, json_data): 
+        try:
+            super().__init__(json_data)
+        except Exception as ex:
+            oadr3_log_critical(f"exception in interval: {ex}", True)
+
+    def getId(self):
+        try:
+            return self['id'] 
+        except Exception as ex:
+            return None
     
-    def __repr__(self):
-        return (f"Interval(id={self.id}, intervalPeriod={self.intervalPeriod}, "
-                f"payloads={self.payloads})")
+    def getPayloads(self)->List:
+        try:
+            out=[]
+            for pd in self['payloads']:
+                out.append(EventPayload(pd))
+            return out
+        except Exception as ex:
+            return None
+    
+#    def __repr__(self):
+#        return (f"Interval(id={self.getId()}"
+#                f"payloads={self.payloads})")
 
 
 '''
