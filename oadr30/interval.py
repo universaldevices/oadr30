@@ -8,6 +8,7 @@ from .log import oadr3_log_critical
 from .definitions import oadr3_alert_types, oadr3_reg_event_types, oadr3_cta2045_types
 from .values_map import ValuesMap
 from .descriptors import EventPayloadDescriptor
+from .datetime_util import ISO8601_Util
 
 class IntervalPeriod(dict):
     """
@@ -35,20 +36,35 @@ class IntervalPeriod(dict):
             oadr3_log_critical(f"exception in IntervalPeriod:__init__: {ex}", True)
 
     def getStartTime(self):
+        '''
+            Returns the [local] start time by parsing the date from ISO format
+        '''
         try:
-            return self['start']
+            iso_date = self['start']
+            iso = ISO8601_Util(iso_date)
+            return iso.toLocal()
         except Exception as ex:
             return None
 
     def getDuration(self):
+        '''
+            Returns the ISO formatted duration in seconds
+        '''
         try:
-            return self['duration']
+            duration = self['duration']
+            iso = ISO8601_Util(duration)
+            return iso.toSeconds()
         except Exception as ex:
             return None
 
     def getRandomizedStart(self):
+        '''
+            Returns the randomized start seconds
+        '''
         try:
-            return self['randomizedStart']
+            duration =  self['randomizedStart']
+            iso = ISO8601_Util(duration)
+            return iso.toSeconds()
         except Exception as ex:
             return None
         
@@ -91,8 +107,6 @@ class Interval(dict):
         except Exception as ex:
             return None
 
-        
-    
 #    def __repr__(self):
 #        return (f"Interval(id={self.getId()}"
 #                f"payloads={self.payloads})")
