@@ -8,7 +8,8 @@ from .log import oadr3_log_critical
 from .definitions import oadr3_alert_types, oadr3_reg_event_types, oadr3_cta2045_types
 from .values_map import ValuesMap
 from .descriptors import EventPayloadDescriptor
-from .datetime_util import ISO8601_Util
+from .datetime_util import ISO8601_DT
+import random
 
 class IntervalPeriod(dict):
     """
@@ -37,12 +38,15 @@ class IntervalPeriod(dict):
 
     def getStartTime(self):
         '''
-            Returns the [local] start time by parsing the date from ISO format
+            Returns the [local] start time as ISO8601_DT object 
         '''
         try:
             iso_date = self['start']
-            iso = ISO8601_Util(iso_date)
-            return iso.toLocal()
+            iso = ISO8601_DT(iso_date)
+            randomized_start= self.getRandomizedStart()
+            if randomized_start != 0:
+                iso.addSeconds(randomized_start, True)
+            return iso
         except Exception as ex:
             return None
 
@@ -52,7 +56,7 @@ class IntervalPeriod(dict):
         '''
         try:
             duration = self['duration']
-            iso = ISO8601_Util(duration)
+            iso = ISO8601_DT(duration)
             return iso.toSeconds()
         except Exception as ex:
             return None
@@ -63,10 +67,10 @@ class IntervalPeriod(dict):
         '''
         try:
             duration =  self['randomizedStart']
-            iso = ISO8601_Util(duration)
-            return iso.toSeconds()
+            iso = ISO8601_DT(duration)
+            return random.randint(0, iso.toSeconds)
         except Exception as ex:
-            return None
+            return 0
         
 #    def __repr__(self):
 #        return (f"IntervalPeriod(start={self.start}, duration={self.duration}, "
@@ -77,11 +81,16 @@ class Interval(dict):
     An object defining a temporal window and a list of valuesMaps.
     If intervalPeriod is present, it may set temporal aspects of the interval or override event.intervalPeriod.
     """
-    def __init__(self, json_data, global_interval_period:IntervalPeriod , global_payload_descriptor:list ): 
+    def __init__(self, json_data, index:int, global_interval_period:IntervalPeriod , global_payload_descriptor:list ): 
+        '''
+            index must start from 0
+        '''
         try:
             super().__init__(json_data)
             self.global_interval_period = global_interval_period
             self.global_payload_descriptor = global_payload_descriptor
+            self.index=0 if index < 0 else index
+            self.interval_period, self.is_global_interval_period=self.__getIntervalPeriod()
         except Exception as ex:
             oadr3_log_critical(f"exception in interval: {ex}", True)
 
@@ -92,20 +101,39 @@ class Interval(dict):
             return None
     
     def getValues(self)->list:
+        values=[]
         try:
-            values=[]
+            ip=self.interval_period
+            if ip == None:
+                oadr3_log_critical("need interval period", False)
+                return values
+
+            startTime:ISO8601_DT=ip.getStartTime()
+            duration=ip.getDuration()
             for pd in self['payloads']:
-                values.append(ValuesMap(pd, global_payload_descriptor))
+                if self.is_global_interval_period:
+                    #if it's global, we have to multiply the duration by the index
+                    abs_duration = duration * self.index
+                    startTime = startTime.addSeconds(abs_duration)
+                values.append(ValuesMap(pd, startTime, duration, self.global_payload_descriptor))
             return values
         except Exception as ex:
-            return None
+            return values
 
-    def getIntervalPeriod(self):
+    def __getIntervalPeriod(self):
+        ''' 
+            returns the actual interval period + whether a global one (True) or local (False)
+        '''
+        local_interval_period = None
         try:
-            local_interval_perid = IntervalPeriod(self['intervalPeriod'])
-            return self.global_interval_period if local_interval_period == None else self.global_interval_period
+            local_interval_period = IntervalPeriod(self['intervalPeriod'])
         except Exception as ex:
-            return None
+            local_interval_period = None
+
+        if local_interval_period == None:
+            return self.global_interval_period, True 
+            
+        return local_interval_period, False 
 
 #    def __repr__(self):
 #        return (f"Interval(id={self.getId()}"

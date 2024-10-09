@@ -2,7 +2,7 @@
 #MIT License
 # iso and timezone conversion utilities
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from tzlocal import get_localzone
 from dateutil import parser
@@ -10,19 +10,36 @@ import isodate
 import pytz
 
 
-class ISO8601_Util:
+class ISO8601_DT:
 
-    def __init__(self, iso_date:str):
-        self.iso_date=iso_date
+    def __init__(self, iso_date):
+        try:
+            if isinstance(iso_date, str):
+                if not self.isDuration(iso_date):
+                    dt_iso = parser.isoparse(iso_date)
+                    #convert everything to utc
+                    self.dt= dt_iso.astimezone(pytz.utc)
+            elif isinstance(iso_date, datetime):
+                self.dt=iso_date
+                self.dt.astimezone(pytz.utc)
+
+        except Exception as ex:
+            raise 
+
+    def isDuration(self, iso_date:str):
+        try:
+            # Attempt to parse the string as an ISO 8601 duration
+            self.duration=isodate.parse_duration(iso_date)
+            return True
+        except (isodate.isoerror.ISO8601Error, ValueError):
+            self.duration=-1
+            return False
 
     def toUtc(self):
         try:
-            dt = parser.isoparse(self.iso_date)
-            # Convert the datetime to UTC
-            dt_utc = dt.astimezone(pytz.utc)
-            return dt_utc.replace(tzinfo=None)
+            return self.dt.replace(tzinfo=None)
         except Exception as ex:
-            return self.iso_date
+            return self.dt
 
     def getLocalTimezone(self):
         return get_localzone()
@@ -30,20 +47,15 @@ class ISO8601_Util:
     def toLocal(self):
         try:
             #first covnert to utc
-            #we cannot use toUtc since it will have timzone offset in there
-            dt = parser.isoparse(self.iso_date)
-            dt_utc = dt.astimezone(pytz.utc)
             local_tz = get_localzone()
-            dt_local = dt_utc.astimezone(local_tz)
+            dt_local = self.dt.astimezone(local_tz)
             return dt_local.replace(tzinfo=None)
         except Exception as ex:
-            return self.iso_date
+            return self.dt
 
     def hasTimezone(self):
         try:
-            # Parse the ISO 8601 string
-            dt = parser.isoparse(self.iso_date)
-            return True if dt.tzinfo is not None else False
+            return True if self.dt.tzinfo is not None else False
         except ValueError:
             return False
 
@@ -53,11 +65,19 @@ class ISO8601_Util:
         '''
         try:
             # Parse the ISO 8601 duration string
-            duration = isodate.parse_duration(self.iso_date)
-            # Convert to total seconds
-            total_seconds = duration.total_seconds()
+            total_seconds = self.duration.total_seconds()
             return total_seconds
         except Exception as ex:
-            return -1 
+            return -1
+
+    def addSeconds(self, seconds_to_add, persist=False) :
+    #    if seconds_to_add <= 0:
+    #        return ISO8601_DT(self.dt)
+
+        new_dt = self.dt + timedelta(seconds=seconds_to_add)
+        if persist:
+            self.dt = new_dt
+            return self
+        return ISO8601_DT(new_dt)
 
 

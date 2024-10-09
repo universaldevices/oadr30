@@ -7,6 +7,7 @@ from typing import Any, List, Union
 from .log import oadr3_log_critical
 from .definitions import oadr3_alert_types, oadr3_reg_event_types, oadr3_cta2045_types
 from .descriptors import EventPayloadDescriptor
+from .datetime_util import ISO8601_DT
 
 class ValuesMap(dict):
     """
@@ -19,7 +20,7 @@ class ValuesMap(dict):
         most often a singular value such as a price.
     """
 
-    def __init__(self, json_data, global_payload_descriptors:list | None):
+    def __init__(self, json_data, start_time:ISO8601_DT, duration, global_payload_descriptor:list | None):
         try:
             super().__init__(json_data)
             payloadType=self.getPayloadType()
@@ -27,6 +28,11 @@ class ValuesMap(dict):
             self.eventInfo=None
             self.units = None
             self.currency = None
+            self.startTime=start_time
+            self.duration=duration
+
+            ##to calculate the end time:
+            #endTime=startTime.addSeconds(duration)
 
             if payloadType in oadr3_reg_event_types:
                 self.eventType='event' #regular events

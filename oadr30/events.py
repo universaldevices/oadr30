@@ -86,38 +86,49 @@ class Event(dict):
       Initialize using the json received from the VTN
     '''
     def __init__(self, json_data):
-      try:
-        super().__init__(json_data)
-      except Exception as ex:
-        raise Oadr3LoggedException('critical', "exception in Event Init-json", True)
+        try:
+          super().__init__(json_data)
+          self.tsValues=[]
+          self.__createTimeSeriesValues()
+        except Exception as ex:
+          raise Oadr3LoggedException('critical', "exception in Event Init-json", True)
 
     def toJson(self)->str:
         return json.dumps(self)
 
     def getIntervalPeriod(self)->IntervalPeriod:
-      try:
-        return IntervalPeriod(self['intervalPeriod'])
-      except Exception as ex:
-        return None
+        try:
+          return IntervalPeriod(self['intervalPeriod'])
+        except Exception as ex:
+          return None
 
     def getEventPayloadDescriptors(self)->list:
-      try:
-        out=[]
-        for pd in self['payloadDescriptors']:
-          out.append(EventPayloadDescriptor(pd))
-        return out
-      except Exception as ex:
-        return None
+        try:
+          out=[]
+          for pd in self['payloadDescriptors']:
+            out.append(EventPayloadDescriptor(pd))
+          return out
+        except Exception as ex:
+          return None
 
     def getIntervals(self)->list:
-      try:
-        intervals=[]
-        for intrv in self['intervals']:
-          intervals.append(Interval(intrv, self.getIntervalPeriod(), self.getEventPayloadDescriptors()))
-        return intervals
-      except Exception as ex:
-        return None
+        try:
+          intervals=[]
+          index=0
+          for intrv in self['intervals']:
+            intervals.append(Interval(intrv, index, self.getIntervalPeriod(), self.getEventPayloadDescriptors()))
+            index+=1
+          return intervals
+        except Exception as ex:
+          return None
 
+    def __createTimeSeriesValues(self):
+        intervals = self.getIntervals()
+        for interval in intervals:
+          self.tsValues.append(interval.getValues())
+
+    def getTimeSeriesValues(self):
+        return self.tsValues
 
 class Events(list):
   '''
@@ -130,14 +141,15 @@ class Events(list):
       if 'createdDateTime' in json_data:
         # we do not have an arry. It's just one stupid element 
         event = Event(json_data)
-        d = event.getEventPayloadDescriptors()
-        i = event.getIntervalPeriod()
-        intervals = event.getIntervals()
-        for interval in intervals:
-          ip = interval.getIntervalPeriod()
-          values = interval.getValues()
+        #d = event.getEventPayloadDescriptors()
+        #i = event.getIntervalPeriod()
+        #intervals = event.getIntervals()
+        #for interval in intervals:
+#          ip = interval.getIntervalPeriod()
+        #  values = interval.getValues()
+        timeseries=event.getTimeSeriesValues()
 
-        super().append(Event(json_data))
+        super().append(event)
       else:
         for event in json_data:
           super().append(Event(event))
