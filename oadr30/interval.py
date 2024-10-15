@@ -9,6 +9,7 @@ from .definitions import oadr3_alert_types, oadr3_reg_event_types, oadr3_cta2045
 from .values_map import ValuesMap
 from .descriptors import EventPayloadDescriptor
 from .datetime_util import ISO8601_DT
+from .config import OADR3Config
 import random
 
 class IntervalPeriod(dict):
@@ -57,7 +58,7 @@ class IntervalPeriod(dict):
         try:
             duration = self['duration']
             iso = ISO8601_DT(duration)
-            return iso.toSeconds()
+            return iso.toSeconds()*OADR3Config.duration_scale
         except Exception as ex:
             return None
 

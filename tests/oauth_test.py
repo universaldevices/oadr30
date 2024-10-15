@@ -10,6 +10,9 @@
 from oadr30.vtn import VTNOps
 from oadr30.log import oadr3_log_critical
 from oadr30.price_server_client import PriceServerClient
+from oadr30.config import OADR3Config 
+from oadr30.scheduler import EventScheduler
+from oadr30.values_map import ValuesMap
 import json
 
 
@@ -21,7 +24,10 @@ import json
 base_url = "http://localhost:8026/openadr3/3.0.1"
 auth_url = "/auth/token"  
 client_id="ven_client"
-client_secret="999" 
+client_secret="999"
+
+def scheduler_callback(segment:ValuesMap):
+    print (segment)
 
 def main():
     try:
@@ -30,15 +36,14 @@ def main():
 #        vtn.get_programs()
 #        vtn.get_program('0')
 #        events = vtn.get_events()
+        OADR3Config.duration_scale=1/360
 
         client= PriceServerClient('https://api.olivineinc.com/i/lbnl/v1/prices/cfh/SummerHDP_MD/OpenADR3')
-        events= client.get_events()
-        se = json.dumps(events, indent=4)
-        print (se)
-#        vtn.get_events('0')
-      #  vtn.__get_token__()
-      #  vtn.__send_request__('POST', url='https://dev.isy.io/api/unsubscribe', body='email=crap@crap.com')
-
+        events= client.getEvents()
+        timeSeries = events.getTimeSeries()
+        scheduler=EventScheduler(timeSeries, scheduler_callback)
+        scheduler.start()
+        scheduler.join()
     except Exception as ex:
         oadr3_log_critical("main failed")
 

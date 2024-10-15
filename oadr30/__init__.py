@@ -13,6 +13,8 @@ from .programs import Program
 from .price_server_client import PriceServerClient
 from .events import Event
 from .datetime_util import ISO8601_DT
+from .scheduler import EventScheduler
+from .config import OADR3Config
 
 
 

@@ -123,9 +123,13 @@ class Event(dict):
           return None
 
     def __createTimeSeriesValues(self):
+        self.tsValues.clear()
         intervals = self.getIntervals()
         for interval in intervals:
-          self.tsValues.append(interval.getValues())
+          values=interval.getValues()
+          if values:
+            for value in values:
+              self.tsValues.append(value)
 
     def getTimeSeriesValues(self):
         return self.tsValues
@@ -135,27 +139,30 @@ class Events(list):
     An array of events
   '''
   def __init__(self, json_data):
-
-    self.event_buckets={} #bucket based on payload type
+  #  self.event_buckets={} #bucket based on payload type
     try:
       if 'createdDateTime' in json_data:
         # we do not have an arry. It's just one stupid element 
         event = Event(json_data)
-        #d = event.getEventPayloadDescriptors()
-        #i = event.getIntervalPeriod()
-        #intervals = event.getIntervals()
-        #for interval in intervals:
-#          ip = interval.getIntervalPeriod()
-        #  values = interval.getValues()
-        timeseries=event.getTimeSeriesValues()
-
-        super().append(event)
+        super().append(Event(json_data))
       else:
         for event in json_data:
           super().append(Event(event))
 
     except Exception as ex:
        raise Oadr3LoggedException('critical', "exception in Events Init", True)
+
+  def getTimeSeries(self):
+    sorted_out=[]
+    try:
+      out=[]
+      for event in self:
+        out.extend(event.getTimeSeriesValues())
+      #sort everything based on start time
+      sorted_out = sorted(out, key=lambda x: x.getStartTime() )
+    except Exception as ex:
+      oadr3_log_critical("failed sorting", True)
+    return sorted_out
 
   def num_events(self):
     return len(self)

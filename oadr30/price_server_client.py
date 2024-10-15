@@ -6,6 +6,7 @@ from .log import Oadr3LoggedException, oadr3_log_critical, oadr3_log_error
 from .programs import Programs, Program
 from .events import Events, Event
 from .ven import VEN
+from .config import OADR3Config 
 import requests
 import json
 from datetime import datetime, timedelta
@@ -69,7 +70,7 @@ class PriceServerClient():
             oadr3_log_critical(f"failed sending {method} request to {url} ....")
             return None
 
-    def get_events(self):
+    def getEvents(self):
         '''
             returns all events for the given program_id
         '''
