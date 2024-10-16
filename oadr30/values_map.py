@@ -29,9 +29,9 @@ class ValuesMap:
             self.eventType=None #regular events
             self.units = None
             self.currency = None
-            self.startTime=start_time.toLocal()
+            self.startTime=start_time.toUtc()
             self.duration=duration
-            self.endTime=start_time.addSeconds(duration).toLocal()
+            self.endTime=start_time.addSeconds(duration).toUtc()
             self.processed=False #whether the scheduler has already processed 
 
             ##to calculate the end time:
@@ -156,3 +156,5 @@ class ValuesMap:
         except Exception as ex:
             return False
 
+    def __str__(self):
+        return f"start={self.startTime}, end={self.endTime}, duration={self.duration}, type={self.payloadType}, value={self.values[0]}"

@@ -10,6 +10,7 @@ from .values_map import ValuesMap
 from .descriptors import EventPayloadDescriptor
 from .datetime_util import ISO8601_DT
 from .config import OADR3Config
+from datetime import datetime, timezone
 import random
 
 class IntervalPeriod(dict):
@@ -43,7 +44,7 @@ class IntervalPeriod(dict):
         '''
         try:
             iso_date = self['start']
-            iso = ISO8601_DT(iso_date)
+            iso = ISO8601_DT(datetime.now(timezone.utc)) if OADR3Config.events_start_now else ISO8601_DT(iso_date)
             randomized_start= self.getRandomizedStart()
             if randomized_start != 0:
                 iso.addSeconds(randomized_start, True)

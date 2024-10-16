@@ -2,13 +2,15 @@
 #MIT License
 import time
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from .values_map import ValuesMap
+from .datetime_util import get_current_utc_time
 
 class EventScheduler(threading.Thread):
     def __init__(self, timeseries, callback):
         '''
             timeseries is an array of valuemaps
+            all times are in utc and not local
         '''
         threading.Thread.__init__(self)
         self.timeseries:[ValuesMap] = timeseries  # List of datetime objects
@@ -21,7 +23,7 @@ class EventScheduler(threading.Thread):
         #everything that's old and  not processed
         for self.current_index in range(len(self.timeseries)):
             segment:ValuesMap = self.timeseries[self.current_index]
-            if datetime.now() > segment.getEndTime():
+            if get_current_utc_time() > segment.getEndTime():
                 segment.setProcessed()
                 continue
             break
@@ -34,7 +36,7 @@ class EventScheduler(threading.Thread):
                 continue
 
             segment:ValuesMap=self.timeseries[self.current_index]
-            current_time = datetime.now()
+            current_time = get_current_utc_time() 
             start_time = segment.getStartTime()
 
             # Calculate the time to sleep until the next event
@@ -51,7 +53,7 @@ class EventScheduler(threading.Thread):
             #call the callback, set processed, increment index and continue
             self.callback(segment)
             segment.setProcessed()
-            current_time = datetime.now()
+            current_time = get_current_utc_time() 
             end_time = segment.getEndTime()
             #increment
             self.current_index=self.current_index+1

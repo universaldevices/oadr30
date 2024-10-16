@@ -2,12 +2,16 @@
 #MIT License
 # iso and timezone conversion utilities
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from tzlocal import get_localzone
 from dateutil import parser
 import isodate
 import pytz
+
+def get_current_utc_time():
+    current_time = datetime.now(timezone.utc)
+    return current_time.replace(tzinfo=None)
 
 
 class ISO8601_DT:
