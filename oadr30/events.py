@@ -152,6 +152,15 @@ class Events(list):
     except Exception as ex:
        raise Oadr3LoggedException('critical', "exception in Events Init", True)
 
+  def appendEvents(self, events):
+    try:
+        for event in events:
+          self.append(event)
+
+    except Exception as ex:
+      oadr3_log_critical("failed appending events", True)
+      
+
   def getTimeSeries(self):
     sorted_out=[]
     try:

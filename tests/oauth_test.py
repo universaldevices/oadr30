@@ -1,22 +1,16 @@
-
-#POST https://authorization-server.com/token
-#client_id	    j3CziWgbG1xyvWBcfGAiGris
-#client_secret	AcOWNGc7x1SPfjH-ZhLlJVSqA-xP_gGHkPfIDU5Wdo7yQhxg
-#User Account
-#https://oauth.com
-#login	    kind-quoll@example.com
-#password	Quaint-Curlew-99
-
 from oadr30.vtn import VTNOps
 from oadr30.log import oadr3_log_critical
 from oadr30.price_server_client import PriceServerClient
 from oadr30.config import OADR3Config, OlivinePriceServer
 from oadr30.scheduler import EventScheduler
 from oadr30.values_map import ValuesMap
-import json
+import json,time
 
 
 def scheduler_callback(segment:ValuesMap):
+    print (segment)
+
+def scheduler_future_callback(segment:ValuesMap):
     print (segment)
 
 def main():
@@ -31,9 +25,21 @@ def main():
 
         client= PriceServerClient(OlivinePriceServer.getUrl('hourly', 'fall', 'price'))
         events= client.getEvents()
+        client= PriceServerClient(OlivinePriceServer.getUrl('hourly', 'fall', 'ghg'))
+        ghgEvents=client.getEvents()
+        events.appendEvents(ghgEvents) #combine them
         timeSeries = events.getTimeSeries()
-        scheduler=EventScheduler(timeSeries, scheduler_callback)
+        scheduler=EventScheduler()
+        scheduler.setTimeSeries(timeSeries)
+        scheduler.registerCallback(scheduler_callback)
+        scheduler.registerFutureCallback(scheduler_future_callback, 30)
         scheduler.start()
+
+#        time.sleep(10)
+#        events= client.getEvents()
+#        timeSeries2 = events.getTimeSeries()
+#        scheduler.setTimeSeries(timeSeries2)
+
         scheduler.join()
     except Exception as ex:
         oadr3_log_critical("main failed")

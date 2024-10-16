@@ -158,3 +158,21 @@ class ValuesMap:
 
     def __str__(self):
         return f"start={self.startTime}, end={self.endTime}, duration={self.duration}, type={self.payloadType}, value={self.values[0]}"
+
+    #we need this function to check whether timeseries are identical
+    def __eq__(self, other):
+        try:
+            if isinstance(other, ValuesMap):
+                return  self.getStartTime() == other.getStartTime() and \
+                    self.getDuration() == other.getDuration() and \
+                    self.getPayloadType() == other.getPayloadType() and \
+                    self.getValues() == other.getValues() and \
+                    self.getEventType() == other.getEventType() and \
+                    self.getDataType() == other.getDataType() and \
+                    self.getMax() == other.getMax() and \
+                    self.getMin() == other.getMin()
+            return False
+        except Exception as ex:
+            return False
+
+                    
