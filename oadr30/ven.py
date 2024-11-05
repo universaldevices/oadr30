@@ -4,6 +4,7 @@ import json
 from .log import Oadr3LoggedException, oadr3_log_critical
 from .descriptors import EventPayloadDescriptor, ReportPayloadDescriptor
 from .interval import Interval
+from .config import OADR3Config
 
 
 
@@ -102,34 +103,38 @@ class VEN(dict):
       A class representing a VEN. Initially, a VEN must be created in the VTN. If successful
       the VTN will return a VEN object with an ID.
     '''
-    def __init__(self, json_data:str):
+    def __init__(self, json_data):
       try:
         super().__init__(json_data)
       except Exception as ex:
         raise Oadr3LoggedException('critical', "exception in VEN Init-json", True)
-
-    @staticmethod
-    def create_ven_request_payload(name:str, attributes=None, resources=None, targets=None):
-      ven = {
-        "venName": name
-      }
-
-      return ven 
-
+    
     def toJson(self)->str:
         return json.dumps(self)
 
-class Events(list):
-  '''
-    An array of events
-  '''
-  def __init__(self, json_data:str):
-    try:
-      for event in json_data:
-        super().append(Event(event))
+    def save(self)->bool:
+      try:
+        with open(OADR3Config.ven_persistence_file, 'w') as file:
+          json.dump(self, file)
+          return True
+      except Exception as ex:
+        oadr3_log_critical("failed saving ven ...")
+        return False
 
-    except Exception as ex:
-       raise Oadr3LoggedException('critical', "exception in Events Init", True)
+    @staticmethod
+    def create_ven_request_payload(name:str, attributes=None, resources=None, targets=None):
+      return f'{{"venName": "{name}"}}'
 
-  def num_events(self):
-    return len(self)
+    @staticmethod
+    def restore_ven():
+      '''
+        return a ven if one exists, otherwise, return None 
+      '''
+      try:
+        with open(OADR3Config.ven_persistence_file, 'r') as file:
+          ven = json.load(file)
+          return VEN(ven)
+      except Exception as ex:
+        return None
+
+

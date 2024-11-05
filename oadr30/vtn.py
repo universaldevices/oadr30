@@ -1,6 +1,6 @@
 #Universal Devices
 #MIT License
-from .log import Oadr3LoggedException, oadr3_log_critical, oadr3_log_error
+from .log import Oadr3LoggedException, oadr3_log_critical, oadr3_log_error, oadr3_log_warning
 from .programs import Programs, Program
 from .events import Events, Event
 from .ven import VEN
@@ -135,18 +135,58 @@ class VTNOps():
             oadr3_log_critical(f"failed sending {method} request to {url} ....")
             return None
 
+    def get_ven(self, id:str):
+        if id == None:
+            oadr3_log_critical(f"id is mandatory ...")
+            return None
+        try:
+           url = f"{self.base_url}{OADR3_VEN_BASE_URL}/{id}"
+           response = self.__send_request__('GET', url) 
+           if response.status_code != 200:
+                oadr3_log_error(f"ven id={id} does not exist")
+                return None
+           ven = VEN(response.json())
+           return ven
+        except Exception as x:
+            oadr3_log_critical(f"failed getting ven {id}", True)
+            return False
+
+    def restore_ven(self):
+        '''
+            Returns a ven that might have been restored in the file system
+        '''
+        try:
+            return  VEN.restore_ven()
+        except Exception as ex:
+            return None
+
+
     def create_ven(self, name:str):
         '''
             Creates a VEN using the given name (venName)
         '''
         try:
+           ven = self.restore_ven()
+           if ven != None:
+                oadr3_log_warning(f"already have a ven with id={ven['id']} and name={ven['venName']}")
+                oadr3_log_warning(f"let's see if we have in the vtn")
+                tmp = self.get_ven(ven['id'])
+                if tmp != None:
+                    oadr3_log_warning(f"vtn also already has a ven with id={ven['id']} and name={ven['venName']}")
+                    return ven
+                oadr3_log_warning(f"vtn does not have a ven with id={ven['id']} and name={ven['venName']}, recreating ..")
+
            payload = VEN.create_ven_request_payload(name)
            url = self.base_url + OADR3_VEN_BASE_URL
            response = self.__send_request__('POST', url, payload) 
-           if response.status_code != 200:
-                oadr3_log_error(f"failed creating VEN ...")
+           if response.status_code == 409:
+                oadr3_log_error(f"failed creating VEN because it already exists ...")
+                return None 
+           if response.status_code != 201:
+                oadr3_log_error(f"failed creating VEN status code = {response.status_code}")
                 return None
-           ven = VEN(response.json())
+           ven = VEN(response.json()) #AUTO SAVES
+           ven.save()
            return ven
         except Exception as x:
             oadr3_log_critical(f"failed creating ven {name}", True)

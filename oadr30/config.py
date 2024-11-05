@@ -20,6 +20,16 @@ class OADR3Config:
     '''
     events_start_now=False
 
+    '''
+       Relative Path to ven peristence file
+    '''
+    ven_persistence_file="ven.json"
+
+    '''
+       Relative Path to programs peristence file
+    '''
+    programs_persistence_file="programs.json"
+
 class VTNRefImpl:
     ''' 
         Some static information for the RI
