@@ -161,7 +161,7 @@ class VTNOps():
             return None
 
 
-    def create_ven(self, name:str):
+    def create_ven(self, name:str=None, attributes:list=None, resources:list=None, targets:list=None):
         '''
             Creates a VEN using the given name (venName)
         '''
@@ -176,7 +176,7 @@ class VTNOps():
                     return ven
                 oadr3_log_warning(f"vtn does not have a ven with id={ven['id']} and name={ven['venName']}, recreating ..")
 
-           payload = VEN.create_ven_request_payload(name)
+           payload = VEN.create_ven_request_payload(name, resources=resources)
            url = self.base_url + OADR3_VEN_BASE_URL
            response = self.__send_request__('POST', url, payload) 
            if response.status_code == 409:

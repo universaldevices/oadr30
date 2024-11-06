@@ -4,6 +4,7 @@ from oadr30.price_server_client import PriceServerClient
 from oadr30.config import OADR3Config, OlivinePriceServer, VTNRefImpl
 from oadr30.scheduler import EventScheduler
 from oadr30.values_map import ValuesMap
+from oadr30.ven import Resource
 import json,time
 
 
@@ -27,7 +28,7 @@ def test(base_url:str, auth_url:str, client_id:str, client_secret:str, ven_name:
             client_secret = VTNRefImpl.client_secret
 
         vtn = VTNOps(base_url=base_url, auth_url=auth_url, client_id=client_id, client_secret=client_secret, auth_token_url_is_json=False )
-        vtn.create_ven("crap6")
+        vtn.create_ven(resources=[Resource()])
         vtn.get_programs()
         vtn.get_program('0')
         events = vtn.get_events()
@@ -48,8 +49,7 @@ def test(base_url:str, auth_url:str, client_id:str, client_secret:str, ven_name:
 #        events= client.getEvents()
 #        timeSeries2 = events.getTimeSeries()
 #        scheduler.setTimeSeries(timeSeries2)
-
-        scheduler.join()
+#        scheduler.join()
     except Exception as ex:
         oadr3_log_critical("main failed")
 

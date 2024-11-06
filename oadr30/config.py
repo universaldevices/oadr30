@@ -30,6 +30,18 @@ class OADR3Config:
     '''
     programs_persistence_file="programs.json"
 
+    '''
+       Default ven name for the system
+    '''
+    default_ven_name="eisy.ven"
+
+    '''
+       Default resource name for the system
+    '''
+    default_system_resource_name="eisy.system"
+
+
+
 class VTNRefImpl:
     ''' 
         Some static information for the RI
