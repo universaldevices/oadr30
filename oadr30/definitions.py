@@ -308,6 +308,57 @@ oadr3_report_reading_types = {
 }
 
 '''
+    These definitions characterize the operating state of a resource under control of a VEN
+'''
+oadr3_resource_operating_state = {
+    'NORMAL':
+    {
+        'desc':'Resource is operating normally. No Demand Response directives are currently being followed.'
+    },
+    'ERROR':
+    {
+        'desc':'Resource has self-reported an error or is not addressable by VEN.'
+    },
+    'IDLE_NORMAL':
+    {
+        'desc':'CTA-2045 device “Indicates that no demand response event is in effect and the SGD has no/insignificant energy consumption.”'
+    },
+    'RUNNING_NORMAL':
+    {
+        'desc':'CTA-2045 device “Indicates that no demand response event is in effect and the SGD has significant energy consumption.”'
+    },
+    'RUNNING_CURTAILED':
+    {
+        'desc':'CTA-2045 device “Indicates that a curtailment type demand response event is in effect and the SGD has significant energy consumption.”'
+    },
+    'RUNNING_HEIGHTENED':
+    { 
+        'desc':'CTA-2045 device “Indicates that a heightened-operation type of demand response event is in effect and the SGD has significant energy consumption.”'
+    },
+    'IDLE_CURTAILED': 
+    {
+        'desc':'CTA-2045 device “Indicates that a curtailment type demand response event is in effect and the SGD has no/insignificant energy consumption.”'
+    },
+    'SGD_ERROR_CONDITION':
+    {
+        'desc':'CTA-2045 device “Indicates that the SGD is not operating because it needs maintenance support or is in some way disabled (i.e. no response to the grid).”'
+    } ,
+    'IDLE_HEIGHTENED':
+    {
+        'desc':'CTA-2045 device “Indicates that a heightened-operation type of demand response event is in effect and the SGD has no/insignificant energy consumption.”'
+    } ,
+    'IDLE_OPTED_OUT':
+    {
+        'desc':'CTA-2045 device “Indicates that the SGD is presently opted out of any demand response events and the SGD has no/insignificant energy consumption.”'
+    },
+    'RUNNING_OPTED_OUT':
+    {
+        'desc':'CTA-2045 device “Indicates that the SGD is presently opted out of any demand response events and the SGD has significant energy consumption.”'
+    }
+}
+
+
+'''
     The following enumerations may be assigned to the payloadType attribute of a payload included in an
     interval included in a report.
 '''
@@ -340,7 +391,7 @@ oadr3_report_types = {
     },
     'OPERATING_STATE': 
     { 
-        'data_type': oadr3_report_reading_types,
+        'data_type': oadr3_resource_operating_state,
         'desc':'Payload values array includes a list of operating state enumerations, see definitin.'
     },
     'UP_REGULATION_AVAILABLE':
@@ -437,56 +488,6 @@ oadr3_report_types = {
     }
 }
 
-
-'''
-    These definitions characterize the operating state of a resource under control of a VEN
-'''
-oadr3_resource_operating_state = {
-    'NORMAL':
-    {
-        'desc':'Resource is operating normally. No Demand Response directives are currently being followed.'
-    },
-    'ERROR':
-    {
-        'desc':'Resource has self-reported an error or is not addressable by VEN.'
-    },
-    'IDLE_NORMAL':
-    {
-        'desc':'CTA-2045 device “Indicates that no demand response event is in effect and the SGD has no/insignificant energy consumption.”'
-    },
-    'RUNNING_NORMAL':
-    {
-        'desc':'CTA-2045 device “Indicates that no demand response event is in effect and the SGD has significant energy consumption.”'
-    },
-    'RUNNING_CURTAILED':
-    {
-        'desc':'CTA-2045 device “Indicates that a curtailment type demand response event is in effect and the SGD has significant energy consumption.”'
-    },
-    'RUNNING_HEIGHTENED':
-    { 
-        'desc':'CTA-2045 device “Indicates that a heightened-operation type of demand response event is in effect and the SGD has significant energy consumption.”'
-    },
-    'IDLE_CURTAILED': 
-    {
-        'desc':'CTA-2045 device “Indicates that a curtailment type demand response event is in effect and the SGD has no/insignificant energy consumption.”'
-    },
-    'SGD_ERROR_CONDITION':
-    {
-        'desc':'CTA-2045 device “Indicates that the SGD is not operating because it needs maintenance support or is in some way disabled (i.e. no response to the grid).”'
-    } ,
-    'IDLE_HEIGHTENED':
-    {
-        'desc':'CTA-2045 device “Indicates that a heightened-operation type of demand response event is in effect and the SGD has no/insignificant energy consumption.”'
-    } ,
-    'IDLE_OPTED_OUT':
-    {
-        'desc':'CTA-2045 device “Indicates that the SGD is presently opted out of any demand response events and the SGD has no/insignificant energy consumption.”'
-    },
-    'RUNNING_OPTED_OUT':
-    {
-        'desc':'CTA-2045 device “Indicates that the SGD is presently opted out of any demand response events and the SGD has significant energy consumption.”'
-    }
-}
 
 '''
     No clue what this is!

@@ -4,14 +4,17 @@ from .log import Oadr3LoggedException, oadr3_log_critical, oadr3_log_error, oadr
 from .programs import Programs, Program
 from .events import Events, Event
 from .ven import VEN
+from .descriptors import ReportPayloadDescriptor
 import requests
 import json
+from http import HTTPStatus
 from datetime import datetime, timedelta
 from typing import Literal
 
 OADR3_EVENT_BASE_URL = '/events'
 OADR3_PROGRAM_BASE_URL = '/programs'
 OADR3_VEN_BASE_URL = '/vens'
+OADR3_REPORTS_BASE_URL = '/reports'
 OADR3_AUTH_URL = '/auth/token'
 
 class VTNOps():
@@ -53,7 +56,7 @@ class VTNOps():
             response = requests.post(self.auth_url, data=postBody, headers=headers)
             if response == None:
                 return False
-            if response.status_code != 200:
+            if response.status_code != HTTPStatus.OK:
                 oadr3_log_error(f'failed getting authentication token - status = {response.status_code}')
                 self.token = None
                 return False
@@ -127,7 +130,7 @@ class VTNOps():
                 oadr3_log_error(f"invalid method {method}....", False)
                 return None
 
-            if response == None or response.status_code != 200:
+            if response == None or response.status_code != HTTPStatus.OK:
                 oadr3_log_error(f"[status code = {response.status_code} : failed executing {method} on {url},  {response.json()}....", False)
 
             return response
@@ -142,7 +145,7 @@ class VTNOps():
         try:
            url = f"{self.base_url}{OADR3_VEN_BASE_URL}/{id}"
            response = self.__send_request__('GET', url) 
-           if response.status_code != 200:
+           if response.status_code != HTTPStatus.OK:
                 oadr3_log_error(f"ven id={id} does not exist")
                 return None
            ven = VEN(response.json())
@@ -179,10 +182,10 @@ class VTNOps():
            payload = VEN.create_ven_request_payload(name, resources=resources)
            url = self.base_url + OADR3_VEN_BASE_URL
            response = self.__send_request__('POST', url, payload) 
-           if response.status_code == 409:
+           if response.status_code == HTTPStatus.CONFLICT:
                 oadr3_log_error(f"failed creating VEN because it already exists ...")
                 return None 
-           if response.status_code != 201:
+           if response.status_code != HTTPStatus.CREATED:
                 oadr3_log_error(f"failed creating VEN status code = {response.status_code}")
                 return None
            ven = VEN(response.json()) #AUTO SAVES
@@ -217,7 +220,7 @@ class VTNOps():
             url = self.base_url + OADR3_PROGRAM_BASE_URL
             url = f"{url}/{program_id}"
             response = self.__send_request__('GET', url) 
-            if response.status_code != 200:
+            if response.status_code != HTTPStatus.OK:
                 oadr3_log_error(f"failed getting program {program_id}")
                 return None
             program = Program(response.json())
@@ -236,7 +239,7 @@ class VTNOps():
                 url = f"{url}?programID={program_id}"
 
             response = self.__send_request__('GET', url) 
-            if response.status_code != 200:
+            if response.status_code != HTTPStatus.OK:
                 oadr3_log_error(f"failed getting events ...")
                 return None
             events = Events(response.json())
@@ -244,4 +247,23 @@ class VTNOps():
         except Exception as ex:
             oadr3_log_critical(f"failed getting events ....")
             return None
+
+    def send_report(self, eventId:str, programId:str, ven:VEN, reportDescriptor:ReportPayloadDescriptor)->bool:
+        if not ven or not programId or not reportDescriptor:
+            oadr3_log_error("to create a report, you need both a VEN and a report descriptor")
+            return False
+        resources = ven.getResources()
+        if not resources:
+            oadr3_log_error("ven has no resources to report on ...")
+            return False
+        for resource in resources:
+            payload = resource.getReportPayload(programId, eventId)
+            url = self.base_url + OADR3_REPORTS_BASE_URL
+            response = self.__send_request__('POST', url, payload) 
+            if response.status_code != HTTPStatus.CREATED:
+                oadr3_log_error(f"failed creating reporet code = {response.status_code}")
+                return None
+
+
+
 

@@ -96,6 +96,12 @@ class Event(dict):
     def toJson(self)->str:
         return json.dumps(self)
 
+    def getId(self)->str:
+        try:
+          return self['id']
+        except Exception as ex:
+          return None
+
     def getIntervalPeriod(self)->IntervalPeriod:
         try:
           return IntervalPeriod(self['intervalPeriod'])
@@ -107,6 +113,15 @@ class Event(dict):
           out=[]
           for pd in self['payloadDescriptors']:
             out.append(EventPayloadDescriptor(pd))
+          return out
+        except Exception as ex:
+          return None
+
+    def getReportPayloadDescriptors(self)->list:
+        try:
+          out=[]
+          for pd in self['reportDescriptors']:
+            out.append(ReportPayloadDescriptor(pd))
           return out
         except Exception as ex:
           return None

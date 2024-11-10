@@ -28,10 +28,14 @@ def test(base_url:str, auth_url:str, client_id:str, client_secret:str, ven_name:
             client_secret = VTNRefImpl.client_secret
 
         vtn = VTNOps(base_url=base_url, auth_url=auth_url, client_id=client_id, client_secret=client_secret, auth_token_url_is_json=False )
-        vtn.create_ven(resources=[Resource()])
+        ven = vtn.create_ven(resources=[Resource()])
         vtn.get_programs()
-        vtn.get_program('0')
+        program = vtn.get_program('0')
         events = vtn.get_events()
+        for event in events:
+            reportDescriptor = event.getReportPayloadDescriptors()
+            if reportDescriptor:
+                vtn.send_report(event.getId(), program.getId(), ven, reportDescriptor)
 
 #        client= PriceServerClient(OlivinePriceServer.getUrl('hourly', 'fall', 'price'))
 #        events= client.getEvents()

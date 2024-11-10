@@ -2,6 +2,7 @@
 #MIT License
 import typing
 from typing import Literal
+from .definitions import oadr3_report_types
 
 
 class OADR3Config:
@@ -36,9 +37,19 @@ class OADR3Config:
     default_ven_name="eisy.ven"
 
     '''
+       Default client name for the system
+    '''
+    default_client_name="eisy.client"
+
+    '''
        Default resource name for the system
     '''
     default_system_resource_name="eisy.system"
+
+    '''
+       Default resource type"
+    '''
+    default_system_resource_type='OPERATING_STATE'
 
 
 

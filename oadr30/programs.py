@@ -47,6 +47,13 @@ class Program(dict):
         super().__init__(json_data)
       except Exception as ex:
         raise Oadr3LoggedException('critical', "exception in Program Init-json", True)
+    
+    def getId(self):
+      try:
+        return self['id']
+      except Exception as ex:
+        return None
+      
 
     def toJson(self)->str:
         return json.dumps(self)
