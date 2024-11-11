@@ -14,7 +14,7 @@ def scheduler_callback(segment:ValuesMap):
 def scheduler_future_callback(segment:ValuesMap):
     print (segment)
 
-def test(base_url:str, auth_url:str, client_id:str, client_secret:str, ven_name:str):
+def main(base_url:str, auth_url:str, client_id:str, client_secret:str, ven_name:str):
     try:
         OADR3Config.duration_scale=1/360
         OADR3Config.events_start_now=True
@@ -37,23 +37,13 @@ def test(base_url:str, auth_url:str, client_id:str, client_secret:str, ven_name:
             if reportDescriptor:
                 vtn.send_report(event.getId(), program.getId(), ven, reportDescriptor)
 
-#        client= PriceServerClient(OlivinePriceServer.getUrl('hourly', 'fall', 'price'))
-#        events= client.getEvents()
-#        client= PriceServerClient(OlivinePriceServer.getUrl('hourly', 'fall', 'ghg'))
-#        ghgEvents=client.getEvents()
-#        events.appendEvents(ghgEvents) #combine them
-#        timeSeries = events.getTimeSeries()
-#        scheduler=EventScheduler()
-#        scheduler.setTimeSeries(timeSeries)
-#        scheduler.registerCallback(scheduler_callback)
-#        scheduler.registerFutureCallback(scheduler_future_callback, 30)
-#        scheduler.start()
-
-#        time.sleep(10)
-#        events= client.getEvents()
-#        timeSeries2 = events.getTimeSeries()
-#        scheduler.setTimeSeries(timeSeries2)
-#        scheduler.join()
+        timeSeries = events.getTimeSeries()
+        scheduler=EventScheduler()
+        scheduler.setTimeSeries(timeSeries)
+        scheduler.registerCallback(scheduler_callback)
+        scheduler.registerFutureCallback(scheduler_future_callback, 30)
+        scheduler.start()
+        scheduler.join()
     except Exception as ex:
         oadr3_log_critical("main failed")
 
@@ -62,4 +52,4 @@ def test(base_url:str, auth_url:str, client_id:str, client_secret:str, ven_name:
 
 
 if __name__ == "__main__":
-     test(None, None, None, None, None)
+     main(None, None, None, None, None)

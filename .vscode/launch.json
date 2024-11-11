@@ -8,7 +8,7 @@
             "name": "cert_test",
             "type": "debugpy",
             "request": "launch",
-            "program": "tests/oauth_test.py",
+            "program": "tests/events_test.py",
             "console": "integratedTerminal"
         },
         {

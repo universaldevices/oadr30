@@ -280,17 +280,16 @@ class VTNOps():
                         oadr3_log_warning(f"failed ceating program {programId}")
                         continue
                     oadr3_log_info(f"successfully created program {programId}")
-                    #now publish the event
-                    if 'eventName' not in event:
-                        event['eventName']=programId
-                    if 'id' not in event:
-                        event['id']=f'{EVENT_ID+1}'
-                    event['programID']=programId
-                    url = self.base_url + OADR3_EVENT_BASE_URL
-                    response = self.__send_request__('POST', url, json.dumps(event)) 
-                    if response.status_code != HTTPStatus.CREATED:
-                        oadr3_log_error(f"failed creating events code = {response.status_code}")
-                        continue
+                #now publish the event
+                if 'eventName' not in event:
+                    event['eventName']=programId
+                if 'id' not in event:
+                    event['id']=f'{EVENT_ID+1}'
+                event['programID']=programId
+                url = self.base_url + OADR3_EVENT_BASE_URL
+                response = self.__send_request__('POST', url, json.dumps(event)) 
+                if response.status_code != HTTPStatus.CREATED:
+                    oadr3_log_error(f"failed creating events code = {response.status_code}")
 
 
         except Exception as ex:
