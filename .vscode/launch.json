@@ -5,11 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "test",
+            "name": "cert_test",
             "type": "debugpy",
             "request": "launch",
             "program": "tests/oauth_test.py",
             "console": "integratedTerminal"
-        }
+        },
+        {
+            "name": "price_server",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "tests/price_server_test.py",
+            "console": "integratedTerminal"
+        },
+
+
     ]
 }

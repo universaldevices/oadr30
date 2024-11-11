@@ -1,6 +1,6 @@
 #Universal Devices
 #MIT License
-from .log import Oadr3LoggedException, oadr3_log_critical, oadr3_log_error, oadr3_log_warning
+from .log import Oadr3LoggedException, oadr3_log_critical, oadr3_log_error, oadr3_log_warning, oadr3_log_info
 from .programs import Programs, Program
 from .events import Events, Event
 from .ven import VEN
@@ -16,6 +16,7 @@ OADR3_PROGRAM_BASE_URL = '/programs'
 OADR3_VEN_BASE_URL = '/vens'
 OADR3_REPORTS_BASE_URL = '/reports'
 OADR3_AUTH_URL = '/auth/token'
+EVENT_ID = 0
 
 class VTNOps():
     '''
@@ -28,7 +29,7 @@ class VTNOps():
             @auth_token_url_is_json - do not touch unless you want to be outside of RFC
         '''
         if base_url == None or client_id == None or client_secret == None: 
-            raise Oadr3LoggedException('critical', "error: base_url is mandatory", True)
+            raise Oadr3LoggedException("error: base_url is mandatory", True)
 
         self.base_url=base_url
         self.auth_url=self.base_url + auth_url
@@ -229,6 +230,21 @@ class VTNOps():
             oadr3_log_critical(f"failed getting program ....")
             return None
 
+    def create_program(self, programId:str, programName="test", country="US", programType="PRICING TARIFF")->bool:
+        payload = {
+            'id': programId,
+            'programName': programName,
+            'country': country,
+            'programType': programType 
+        }
+        payload = json.dumps(payload)
+        url = self.base_url + OADR3_PROGRAM_BASE_URL
+        response = self.__send_request__('POST', url, payload) 
+        if response.status_code != HTTPStatus.CREATED:
+            oadr3_log_error(f"failed creating reporet code = {response.status_code}")
+            return None
+        return Program(response.json())
+        
     def get_events(self, program_id:str=None):
         '''
             returns all events for the given program_id
@@ -247,6 +263,38 @@ class VTNOps():
         except Exception as ex:
             oadr3_log_critical(f"failed getting events ....")
             return None
+
+    def create_events(self, events:Events)->bool:
+        try:
+            if not events or len(events) == 0:
+                return False
+            for event in events:
+                programId=event.getProgramId()
+                if not programId:
+                    continue
+                programId='0' #programId[0:8]
+                program = self.get_program(programId)
+                if not program:
+                    oadr3_log_warning(f"creating program {programId}")
+                    if not self.create_program(programId):
+                        oadr3_log_warning(f"failed ceating program {programId}")
+                        continue
+                    oadr3_log_info(f"successfully created program {programId}")
+                    #now publish the event
+                    if 'eventName' not in event:
+                        event['eventName']=programId
+                    if 'id' not in event:
+                        event['id']=f'{EVENT_ID+1}'
+                    event['programID']=programId
+                    url = self.base_url + OADR3_EVENT_BASE_URL
+                    response = self.__send_request__('POST', url, json.dumps(event)) 
+                    if response.status_code != HTTPStatus.CREATED:
+                        oadr3_log_error(f"failed creating events code = {response.status_code}")
+                        continue
+
+
+        except Exception as ex:
+            return False
 
     def send_report(self, eventId:str, programId:str, ven:VEN, reportDescriptor:ReportPayloadDescriptor)->bool:
         if not ven or not programId or not reportDescriptor:

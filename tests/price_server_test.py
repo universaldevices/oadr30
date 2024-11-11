@@ -1,9 +1,10 @@
 from oadr30.vtn import VTNOps
 from oadr30.log import oadr3_log_critical
 from oadr30.price_server_client import PriceServerClient
-from oadr30.config import OADR3Config, OlivinePriceServer
+from oadr30.config import OADR3Config, OlivinePriceServer, VTNRefImpl
 from oadr30.scheduler import EventScheduler
 from oadr30.values_map import ValuesMap
+from oadr30.vtn import VTNOps
 import json,time
 
 
@@ -25,6 +26,9 @@ def main():
 
         client= PriceServerClient(OlivinePriceServer.getUrl('hourly', 'fall', 'price'))
         events= client.getEvents()
+        vtn = VTNOps(VTNRefImpl.base_url,VTNRefImpl.bl_client_id, VTNRefImpl.bl_client_secret)
+        vtn.create_events(events)
+
         client= PriceServerClient(OlivinePriceServer.getUrl('hourly', 'fall', 'ghg'))
         ghgEvents=client.getEvents()
         events.appendEvents(ghgEvents) #combine them

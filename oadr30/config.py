@@ -61,6 +61,8 @@ class VTNRefImpl:
     auth_url = "/auth/token"  
     client_id="ven_client"
     client_secret="999"
+    bl_client_id="bl_client"
+    bl_client_secret="1001"
 
 
 class OlivinePriceServer:

@@ -102,6 +102,13 @@ class Event(dict):
         except Exception as ex:
           return None
 
+    def getProgramId(self)->str:
+        try:
+          return self['programID']
+        except Exception as ex:
+          return None
+
+
     def getIntervalPeriod(self)->IntervalPeriod:
         try:
           return IntervalPeriod(self['intervalPeriod'])

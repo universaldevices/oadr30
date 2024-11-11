@@ -85,3 +85,7 @@ class PriceServerClient():
             oadr3_log_critical(f"failed getting events ....")
             return None
 
+
+
+
+
