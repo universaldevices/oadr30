@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='oadr30_ven_ud',
-    version='1.0.2',
+    version='1.0.3',
     packages=find_packages(),
     description='Open Source OpenADR 3.0 VEN Implementation',
     long_description=open('README.md').read(),
