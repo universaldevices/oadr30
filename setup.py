@@ -10,7 +10,6 @@ setup(
     author='Michel Kohanim',
     author_email='support@universal-devices.com',
     url='https://github.com/universaldevices/oadr30.git',
-    packages=find_packages(), 
     install_requires=[
 	'requests>=2.25.1',
     'tzlocal>=4.2',
