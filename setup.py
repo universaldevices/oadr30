@@ -11,10 +11,7 @@ setup(
     author_email='support@universal-devices.com',
     url='https://github.com/universaldevices/oadr30.git',
     install_requires=[
-	'requests>=2.25.1',
-    'tzlocal>=4.2',
-    'isodate>=0.6.1',
-    'pytz>=2024.1'
+	'requests>=2.25.1'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
