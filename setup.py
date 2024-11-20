@@ -12,6 +12,7 @@ setup(
     url='https://github.com/universaldevices/oadr30.git',
     install_requires=[
 	'requests>=2.25.1',
+    'isodate>=0.6.1',
     'pytz>=2024.1'
     ],
     classifiers=[
