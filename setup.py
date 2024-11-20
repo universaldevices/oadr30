@@ -13,7 +13,8 @@ setup(
     install_requires=[
 	'requests>=2.25.1',
     'isodate>=0.6.1',
-    'pytz>=2024.1'
+    'pytz>=2024.1',
+    'tzlocal>=4.2'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
