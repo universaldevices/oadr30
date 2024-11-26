@@ -4,3 +4,10 @@ oadr30.egg-info/
 oadr30.egg-info/*
 oadr30/__pycache__/
 oadr30/__pycache__/*
+egg-info/*
+egg-info/
+logs/*
+logs/
+oadr30_ven_ud.egg-info/*
+oadr30_ven_ud.egg-info/
+
