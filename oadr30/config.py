@@ -57,7 +57,7 @@ class VTNRefImpl:
     ''' 
         Some static information for the RI
     '''
-    base_url = "http://localhost:8026/openadr3/3.0.1"
+    base_url = "http://localhost:8026/openadr3/3.1.0"
     auth_url = "/auth/token"  
     client_id="ven_client"
     client_secret="999"
