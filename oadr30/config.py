@@ -8,7 +8,7 @@ from .definitions import oadr3_report_types
 class OADR3Config:
 
     '''
-        Use oadr3_scale to scale up/down the durations. i.e. 
+        Use duration_scale to scale up/down the durations. i.e. 
         Scale=1/5, changes the duration to duration /= 5
         scale=5, changes the duration to duration *= 5
         Mostly used for test purposes
