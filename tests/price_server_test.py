@@ -16,15 +16,15 @@ def scheduler_future_callback(segment:ValuesMap):
 
 def main():
     try:
-        OADR3Config.duration_scale=1/360
+        #OADR3Config.duration_scale=1/360
         OADR3Config.events_start_now=True
 
-        client= PriceServerClient(OlivinePriceServer.getUrl('hourly', 'fall', 'price'))
+        client= PriceServerClient(OlivinePriceServer.getUrl('hourly', 'summer', 'price'))
         events= client.getEvents()
-        client= PriceServerClient(OlivinePriceServer.getUrl('hourly', 'fall', 'ghg'))
+        client= PriceServerClient(OlivinePriceServer.getUrl('hourly', 'summer', 'ghg'))
         ghgEvents=client.getEvents()
         events.appendEvents(ghgEvents) #combine them
-        vtn = VTNOps(VTNRefImpl.base_url,VTNRefImpl.bl_client_id, VTNRefImpl.bl_client_secret)
+        vtn = VTNOps(VTNRefImpl.test_base_url,VTNRefImpl.bl_client_id, VTNRefImpl.bl_client_secret)
         vtn.create_events(events)
     except Exception as ex:
         oadr3_log_critical("main failed")
