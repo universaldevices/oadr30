@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='oadr30_ven_ud',
-    version='1.0.4',
+    version='1.0.5',
     packages=find_packages(),
     description='Open Source OpenADR 3.0 VEN Implementation',
     long_description=open('README.md').read(),
@@ -11,10 +11,11 @@ setup(
     author_email='support@universal-devices.com',
     url='https://github.com/universaldevices/oadr30.git',
     install_requires=[
-	'requests>=2.25.1',
+    'requests>=2.25.1',
     'isodate>=0.6.1',
     'pytz>=2024.1',
-    'tzlocal>=4.2'
+    'tzlocal>=4.2',
+    'python-dateutil' 
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
