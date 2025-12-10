@@ -32,7 +32,7 @@ class VTNOps():
             raise Oadr3LoggedException("error: base_url is mandatory", True)
 
         self.base_url=base_url
-        self.auth_url=self.base_url + auth_url
+        self.auth_url= auth_url if (auth_url.startswith('http') or auth_url.startswith('https')) else self.base_url + auth_url
         self.client_id = client_id
         self.client_secret= client_secret
         self.token = None
