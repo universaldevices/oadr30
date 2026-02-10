@@ -22,6 +22,7 @@ class EventScheduler(threading.Thread):
         self.callbacks = [] #an array of callbacks
         self.future_callbacks = [] #an array of callbacks
         self.stop_event = threading.Event()  # Event to stop the thread
+        self.terminate_event = threading.Event()  # Event to terminate the event
         self.stop()
         self.current_index = 0 
 
@@ -51,15 +52,16 @@ class EventScheduler(threading.Thread):
             pass
 
     def setTimeSeries(self, ts:[ValuesMap]):
+        if self.timeseries == ts:
+            return
         while not self.isStopped():
             self.stop()
             self.stop_event.wait(timeout=2)
-
+        self.timeseries = ts 
+        self.current_index = 0
+        #restart the thread
         self.stop_event.clear()
 
-        if self.timeseries != ts:
-            self.timeseries = ts 
-            self.current_index = 0
 
     def notifyFutureEvents(self, start_index:int):
         try:
@@ -91,42 +93,45 @@ class EventScheduler(threading.Thread):
                 continue
             break
 
-        # at this juncture, current_index points to a segment that needs to be scheduled
-        while not self.stop_event.is_set():
-            if self.current_index >= len(self.timeseries):
-                self.stop_event.wait(timeout=1800)
-                continue
-
-            segment:ValuesMap=self.timeseries[self.current_index]
-            current_time = get_current_utc_time() 
-            start_time = segment.getStartTime()
-
-            # Calculate the time to sleep until the next event
-            time_diff = (start_time - current_time).total_seconds()
-            if time_diff > 0:
-                self.notifyFutureEvents(self.current_index)
-                # Wait until the next event or stop event is set
-                self.stop_event.wait(timeout=time_diff)
-                
-            # If the stop_event was set while waiting, exit early
+        while not self.terminate_event.is_set():
+            self.stop_event.wait(timeout=1800)
             if self.stop_event.is_set():
-                continue #stops it
+                continue
+            # at this juncture, current_index points to a segment that needs to be scheduled
+            while not self.stop_event.is_set():
+                if self.current_index >= len(self.timeseries):
+                    break 
 
-            #if we get here, the event has already started
-            #call the callback, set processed, increment index and continue
-            for callback in self.callbacks:
-                callback(segment)
-            segment.setProcessed()
-            #notify future events
-            current_time = get_current_utc_time() 
-            end_time = segment.getEndTime()
-            #increment
-            self.current_index=self.current_index+1
-            time_diff = (end_time - current_time).total_seconds()
-            if time_diff > 0:
-                self.notifyFutureEvents(self.current_index+1)
-                # Wait until the next event or stop event is set
-                self.stop_event.wait(timeout=time_diff)
+                segment:ValuesMap=self.timeseries[self.current_index]
+                current_time = get_current_utc_time() 
+                start_time = segment.getStartTime()
+
+                # Calculate the time to sleep until the next event
+                time_diff = (start_time - current_time).total_seconds()
+                if time_diff > 0:
+                    self.notifyFutureEvents(self.current_index)
+                    # Wait until the next event or stop event is set
+                    self.stop_event.wait(timeout=time_diff)
+                    
+                # If the stop_event was set while waiting, exit early
+                if self.stop_event.is_set():
+                    break #stops it and waits for the next time series
+
+                #if we get here, the event has already started
+                #call the callback, set processed, increment index and continue
+                for callback in self.callbacks:
+                    callback(segment)
+                segment.setProcessed()
+                #notify future events
+                current_time = get_current_utc_time() 
+                end_time = segment.getEndTime()
+                #increment
+                self.current_index=self.current_index+1
+                time_diff = (end_time - current_time).total_seconds()
+                if time_diff > 0:
+                    self.notifyFutureEvents(self.current_index+1)
+                    # Wait until the next event or stop event is set
+                    self.stop_event.wait(timeout=time_diff)
 
 
     def isStopped(self):
