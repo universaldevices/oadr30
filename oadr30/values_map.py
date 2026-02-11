@@ -3,11 +3,9 @@
 '''
     Common objects used throughout
 '''
-from typing import Any, List, Union
 from .log import oadr3_log_critical
 from .definitions import oadr3_alert_types, oadr3_reg_event_types, oadr3_cta2045_types
-from .descriptors import EventPayloadDescriptor
-from .datetime_util import ISO8601_DT
+from .datetime_util import ISO8601_DT, get_current_utc_time 
 
 class ValuesMap:
     """
@@ -113,6 +111,9 @@ class ValuesMap:
 
     def getEndTime(self):
         return self.endTime
+    
+    def isEnded(self):
+        return get_current_utc_time() > self.endTime
 
     def getDuration(self):
         return self.duration
@@ -157,7 +158,7 @@ class ValuesMap:
             return False
 
     def __str__(self):
-        return f"start={self.startTime}, end={self.endTime}, duration={self.duration}, type={self.payloadType}, value={self.values[0]}"
+        return f"start={self.startTime}, end={self.endTime}, duration={self.duration}, type={self.payloadType}, value={self.values[0]}, processed={self.processed}, ended={self.isEnded()}"
 
     #we need this function to check whether timeseries are identical
     def __eq__(self, other):

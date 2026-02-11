@@ -1,8 +1,7 @@
 #Universal Devices
 #MIT License
-import time
 import threading
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from .values_map import ValuesMap
 from .datetime_util import get_current_utc_time
 
@@ -11,6 +10,54 @@ class FutureCallback:
         self.callback=callback
         self.duration=duration
 
+class SchedulePoint:
+    """A point in time when one or more event transitions occur.
+       The scheduler walks a sorted list of these, sleeping between points.
+    """
+    def __init__(self, time):
+        self.time = time
+        self.starting = []   # segments that START at this time
+        self.ending = []     # segments that END at this time
+
+    def __repr__(self):
+        return (f"SchedulePoint({self.time}, "
+                f"starts={len(self.starting)}, "
+                f"ends={len(self.ending)})")
+
+class SchedulerControl():
+    def __init__(self):
+        self.stop_event = threading.Event()  # Event to signal stopping the thread
+        self.start_event = threading.Event()  # Event to signal starting the thread
+        self.stopped = True
+
+    def wait_for_stop(self, timeout=None):
+        self.stopped = False
+        result = self.stop_event.wait(timeout=timeout)
+        return result
+    
+    def wait_for_start(self, timeout=None):
+        self.stopped = True
+        result = self.start_event.wait(timeout=timeout)
+        return result
+        
+    def start(self):
+        self.stop_event.clear()  # Clear the stop event to allow the thread to run
+        self.start_event.set()  # Set the start event to signal the thread to start
+
+    def stop(self):
+        self.stop_event.set()  # Set the stop event to signal the thread to stop
+        self.start_event.clear()  # Clear the start event
+
+    def is_start_set(self):
+        return self.start_event.is_set()
+    
+    def is_stop_set(self):
+        return self.stop_event.is_set()
+    
+    def is_stopped(self):
+        return self.stopped
+
+
 class EventScheduler(threading.Thread):
     def __init__(self):
         '''
@@ -18,11 +65,10 @@ class EventScheduler(threading.Thread):
             all times are in utc and not local
         '''
         threading.Thread.__init__(self)
-        self.timeseries:[ValuesMap] = None  # List of datetime objects
+        self.timeseries:list[ValuesMap] = None  # List of datetime objects
         self.callbacks = [] #an array of callbacks
         self.future_callbacks = [] #an array of callbacks
-        self.stop_event = threading.Event()  # Event to stop the thread
-        self.terminate_event = threading.Event()  # Event to terminate the event
+        self.scheduler_control = SchedulerControl()  # Event to signal stopping the thread 
         self.stop()
         self.current_index = 0 
 
@@ -51,91 +97,108 @@ class EventScheduler(threading.Thread):
         except Exception as ex:
             pass
 
-    def setTimeSeries(self, ts:[ValuesMap]):
+    def setTimeSeries(self, ts:list[ValuesMap]):
+        if not self.is_alive():
+            self.start()
         if self.timeseries == ts:
             return
-        while not self.isStopped():
-            self.stop()
-            self.stop_event.wait(timeout=2)
+        #different time series
+        while not self.scheduler_control.is_stop_set():
+            self.scheduler_control.stop()
+
         self.timeseries = ts 
-        self.current_index = 0
         #restart the thread
-        self.stop_event.clear()
+        self.scheduler_control.start()
 
+    def _build_schedule(self, timeseries:list[ValuesMap]) -> list[SchedulePoint]:
+        """Build a sorted list of SchedulePoints from a flat timeseries.
+           Each unique start/end time becomes a single SchedulePoint
+           containing all the segments that transition at that moment.
+        """
+        points = {}  # datetime -> SchedulePoint
+        for segment in timeseries:
+            start = segment.getStartTime()
+            end   = segment.getEndTime()
 
-    def notifyFutureEvents(self, start_index:int):
+            if start not in points:
+                points[start] = SchedulePoint(start)
+            points[start].starting.append(segment)
+
+            if end not in points:
+                points[end] = SchedulePoint(end)
+            points[end].ending.append(segment)
+
+        return sorted(points.values(), key=lambda p: p.time)
+
+    def _notify_future_events(self, schedule:list[SchedulePoint], from_index:int):
+        """Notify future-callbacks about upcoming segments within their look-ahead window."""
         try:
-               for f_callback in self.future_callbacks:
-                    duration = f_callback.duration
-                    current_time=get_current_utc_time()
-                    future_time=current_time + timedelta(seconds=duration)
-                    #now go through all the segments starting from the start_index
-                    #and see whether or not they are in the range
-                    print (f" --- future: {future_time} ---")
-                    for start_index in range(len(self.timeseries)):
-                        segment:ValuesMap = self.timeseries[start_index]
-                        if segment.isProcessed():
-                            continue
-                        if segment.getStartTime() > future_time:
-                            break 
-                        f_callback.callback(segment)
-                    print (" --- end future ---")
+            for f_callback in self.future_callbacks:
+                current_time = get_current_utc_time()
+                future_time  = current_time + timedelta(seconds=f_callback.duration)
+                for i in range(from_index, len(schedule)):
+                    point = schedule[i]
+                    if point.time > future_time:
+                        break
+                    for segment in point.starting:
+                        if not segment.isProcessed():
+                            f_callback.callback(segment)
         except Exception as ex:
             pass
 
     def run(self):
-        #first go through the whole list and make sure you bypass
-        #everything that's old and  not processed
-        for self.current_index in range(len(self.timeseries)):
-            segment:ValuesMap = self.timeseries[self.current_index]
-            if get_current_utc_time() > segment.getEndTime():
-                segment.setProcessed()
+
+        while True:
+            self.scheduler_control.wait_for_start(timeout=1800)
+            if self.scheduler_control.is_stop_set():
                 continue
-            break
 
-        while not self.terminate_event.is_set():
-            self.stop_event.wait(timeout=1800)
-            if self.stop_event.is_set():
-                continue
-            # at this juncture, current_index points to a segment that needs to be scheduled
-            while not self.stop_event.is_set():
-                if self.current_index >= len(self.timeseries):
-                    break 
+            schedule = self._build_schedule(self.timeseries)
 
-                segment:ValuesMap=self.timeseries[self.current_index]
-                current_time = get_current_utc_time() 
-                start_time = segment.getStartTime()
+            # ------ skip schedule points that are entirely in the past ------
+            point_index = 0
+            now = get_current_utc_time()
+            while point_index < len(schedule) and schedule[point_index].time <= now:
+                for segment in schedule[point_index].starting:
+                    if now > segment.getEndTime():
+                        segment.setProcessed()
+                point_index += 1
 
-                # Calculate the time to sleep until the next event
-                time_diff = (start_time - current_time).total_seconds()
+            # ------ walk the remaining schedule ------
+            while point_index < len(schedule) and not self.scheduler_control.is_stop_set():
+                point = schedule[point_index]
+                current_time = get_current_utc_time()
+
+                # sleep until this trigger point
+                time_diff = (point.time - current_time).total_seconds()
                 if time_diff > 0:
-                    self.notifyFutureEvents(self.current_index)
-                    # Wait until the next event or stop event is set
-                    self.stop_event.wait(timeout=time_diff)
-                    
-                # If the stop_event was set while waiting, exit early
-                if self.stop_event.is_set():
-                    break #stops it and waits for the next time series
+                    self._notify_future_events(schedule, point_index)
+                    self.scheduler_control.wait_for_stop(timeout=time_diff)
+                    if self.scheduler_control.is_stop_set():
+                        break
 
-                #if we get here, the event has already started
-                #call the callback, set processed, increment index and continue
-                for callback in self.callbacks:
-                    callback(segment)
-                segment.setProcessed()
-                #notify future events
-                current_time = get_current_utc_time() 
-                end_time = segment.getEndTime()
-                #increment
-                self.current_index=self.current_index+1
-                time_diff = (end_time - current_time).total_seconds()
-                if time_diff > 0:
-                    self.notifyFutureEvents(self.current_index+1)
-                    # Wait until the next event or stop event is set
-                    self.stop_event.wait(timeout=time_diff)
+                # --- process endings first so callbacks know prior events finished ---
+                for segment in point.ending:
+                    for callback in self.callbacks:
+                        callback(segment)   # segment.isEnded() == True at this time
 
+                # --- then process starts ---
+                for segment in point.starting:
+                    for callback in self.callbacks:
+                        callback(segment)
+                    segment.setProcessed()
 
-    def isStopped(self):
-        return self.stop_event.is_set()
+                point_index += 1
 
+            # all points consumed (or stopped) – wait for new timeseries
+            if not self.scheduler_control.is_stop_set():
+                self.scheduler_control.stop()
+    
     def stop(self):
-        self.stop_event.set()  # Set the event to signal stopping
+        if self.scheduler_control.is_stopped():
+            return
+        self.scheduler_control.stop()  # Set the event to signal stopping
+        self.timeseries = None
+        self.current_index = 0
+       # for callback in self.callbacks:
+       #     callback(None)
