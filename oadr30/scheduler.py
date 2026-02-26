@@ -130,6 +130,38 @@ class EventScheduler(threading.Thread):
 
         return sorted(points.values(), key=lambda p: p.time)
 
+    def _notify_start_events(self, point:SchedulePoint, check_end:bool):
+        """Notify an event that's either starting or has started but not processed"""  
+                #for segment in point.starting:
+                #    for callback in self.callbacks:
+                #        callback(segment)
+                #    segment.setProcessed()
+
+        try:
+            for callback in self.callbacks:
+                for segment in (point.ending if check_end else point.starting):
+                    if not segment.isProcessed() and not segment.isNotified():
+                        callback(segment)
+                        segment.setNotified()
+        except Exception as ex:
+            pass
+    
+    def _notify_end_events(self, point:SchedulePoint):
+        """Notify an event that's either starting or has started but not processed"""  
+                #for segment in point.starting:
+                #    for callback in self.callbacks:
+                #        callback(segment)
+                #    segment.setProcessed()
+
+        try:
+            for callback in self.callbacks:
+                for segment in point.ending:
+                    if not segment.isProcessed():
+                        segment.setProcessed()
+                        callback(segment)
+        except Exception as ex:
+            pass
+
     def _notify_future_events(self, schedule:list[SchedulePoint], from_index:int):
         """Notify future-callbacks about upcoming segments within their look-ahead window."""
         try:
@@ -172,21 +204,20 @@ class EventScheduler(threading.Thread):
                 # sleep until this trigger point
                 time_diff = (point.time - current_time).total_seconds()
                 if time_diff > 0:
+                    self._notify_start_events(point, True)
                     self._notify_future_events(schedule, point_index)
                     self.scheduler_control.wait_for_stop(timeout=time_diff)
                     if self.scheduler_control.is_stop_set():
                         break
 
-                # --- process endings first so callbacks know prior events finished ---
-                for segment in point.ending:
-                    for callback in self.callbacks:
-                        callback(segment)   # segment.isEnded() == True at this time
+                #if anything is ended, notify  
+                self._notify_end_events(point)
+
+                #if anyting has started, notify
+                self._notify_start_events(point, False)
 
                 # --- then process starts ---
-                for segment in point.starting:
-                    for callback in self.callbacks:
-                        callback(segment)
-                    segment.setProcessed()
+                #self._notify_current_events(point, True)
 
                 point_index += 1
 

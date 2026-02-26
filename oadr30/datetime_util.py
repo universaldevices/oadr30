@@ -16,6 +16,13 @@ def get_current_utc_time():
 
 class ISO8601_DT:
 
+    @staticmethod
+    def toLocal_dt(utc):
+        try:
+            return utc.replace(tzinfo=timezone.utc).astimezone()
+        except Exception as ex:
+            return utc 
+
     def __init__(self, iso_date):
         try:
             if isinstance(iso_date, str):
@@ -50,10 +57,7 @@ class ISO8601_DT:
 
     def toLocal(self):
         try:
-            #first covnert to utc
-            local_tz = get_localzone()
-            dt_local = self.dt.astimezone(local_tz)
-            return dt_local.replace(tzinfo=None)
+            return ISO8601_DT.toLocal_dt(self.dt)
         except Exception as ex:
             return self.dt
 
@@ -84,4 +88,17 @@ class ISO8601_DT:
             return self
         return ISO8601_DT(new_dt)
 
+    def addOfset(self, offset:timedelta, persist=True):
+        """ add or subtract offset """
+
+        if not offset:
+            return self
+        try:
+            new_dt = self.dt + offset 
+            if pserist:
+                self.dt = new_dt
+                return self
+            return ISO8601_DT(new_dt)
+        except Exception as ex:
+            return self
 

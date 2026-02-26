@@ -12,7 +12,8 @@ def scheduler_callback(segment:ValuesMap):
     print (segment)
 
 def scheduler_future_callback(segment:ValuesMap):
-    print (segment)
+    #print (f"Future:\n{segment}")
+    pass
 
 def main(base_url:str, auth_url:str, client_id:str, client_secret:str, ven_name:str):
     try:
@@ -39,10 +40,10 @@ def main(base_url:str, auth_url:str, client_id:str, client_secret:str, ven_name:
 
         timeSeries = events.getTimeSeries()
         scheduler=EventScheduler()
-        scheduler.setTimeSeries(timeSeries)
         scheduler.registerCallback(scheduler_callback)
         scheduler.registerFutureCallback(scheduler_future_callback, 30)
         scheduler.start()
+        scheduler.setTimeSeries(timeSeries)
         scheduler.join()
     except Exception as ex:
         oadr3_log_critical("main failed")
@@ -52,4 +53,5 @@ def main(base_url:str, auth_url:str, client_id:str, client_secret:str, ven_name:
 
 
 if __name__ == "__main__":
-     main(None, None, None, None, None)
+    main(VTN_Base_URL, Auth, Client_ID, Client_Secret, None)
+ #   main(None, None, None, None, None)

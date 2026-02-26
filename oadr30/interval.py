@@ -117,7 +117,9 @@ class Interval(dict):
                     #if it's global, we have to multiply the duration by the index
                     abs_duration = duration * self.index
                     startTime = startTime.addSeconds(abs_duration)
-                values.append(ValuesMap(pd, startTime, duration, self.global_payload_descriptor))
+                vms=ValuesMap.getNormalizedValuesMap(pd, startTime, duration, self.global_payload_descriptor)
+                if vms:
+                    values.extend(vms)
             return values
         except Exception as ex:
             return values

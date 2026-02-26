@@ -132,7 +132,7 @@ class VTNOps():
                 return None
 
             if response == None or response.status_code != HTTPStatus.OK:
-                oadr3_log_error(f"[status code = {response.status_code} : failed executing {method} on {url},  {response.json()}....", False)
+                oadr3_log_error(f'[status code = {response.status_code if response else "n/a"} : failed executing {method} on {url},  {response.json() if response else "n/a"}....', False)
 
             return response
         except Exception as ex:
@@ -221,7 +221,7 @@ class VTNOps():
             url = self.base_url + OADR3_PROGRAM_BASE_URL
             url = f"{url}/{program_id}"
             response = self.__send_request__('GET', url) 
-            if response.status_code != HTTPStatus.OK:
+            if not response or response.status_code != HTTPStatus.OK:
                 oadr3_log_error(f"failed getting program {program_id}")
                 return None
             program = Program(response.json())

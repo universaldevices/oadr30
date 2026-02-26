@@ -6,6 +6,7 @@
 from .log import oadr3_log_critical
 from .definitions import oadr3_alert_types, oadr3_reg_event_types, oadr3_cta2045_types
 from .datetime_util import ISO8601_DT, get_current_utc_time 
+from zoneinfo import ZoneInfo
 
 class ValuesMap:
     """
@@ -17,6 +18,38 @@ class ValuesMap:
         values (List[Union[float, int, str, bool, Point]]): A list of data points, 
         most often a singular value such as a price.
     """
+
+    @staticmethod
+    def getNormalizedValuesMap(json_data, startTime:ISO8601_DT, duration, global_payload_descriptor:list | None)->list:
+        """ 
+            returns a list of values maps based on the payload
+        """ 
+
+        try:
+            vm = ValuesMap(json_data, startTime, duration, global_payload_descriptor)
+            if vm.payloadType != 'PRICE' and vm.payloadType != "GHG" and vm.payloadType != "EXPORT_PRICE":
+                return [vm]
+
+
+            num_values = len(vm.values) 
+            if num_values <= 1:
+                return [vm]
+
+            out = []
+            duration = vm.duration/num_values
+            index=0
+
+            for value in vm.values:
+                st=startTime.addSeconds(index*duration)
+                json_data['values']=[value]
+                cp = ValuesMap(json_data, st, duration, global_payload_descriptor)
+                out.append(cp)
+                index+=1
+            return out
+        except Exception as ex:
+            oadr3_log_critical(f"failed creating a list of values maps: {ex}", True)
+            return None
+
 
     def __init__(self, json_data, start_time:ISO8601_DT, duration, global_payload_descriptor:list | None):
         try:
@@ -31,6 +64,7 @@ class ValuesMap:
             self.duration=duration
             self.endTime=start_time.addSeconds(duration).toUtc()
             self.processed=False #whether the scheduler has already processed 
+            self.notified=False
 
             ##to calculate the end time:
             #endTime=startTime.addSeconds(duration)
@@ -100,6 +134,12 @@ class ValuesMap:
             oadr3_log_critical(f"invalid values in the array: {ex}", True)
             return None
 
+    def setNotified(self):
+        self.notified=True
+
+    def isNotified(self):
+        return self.notified
+
     def setProcessed(self):
         self.processed=True
 
@@ -158,7 +198,8 @@ class ValuesMap:
             return False
 
     def __str__(self):
-        return f"start={self.startTime}, end={self.endTime}, duration={self.duration}, type={self.payloadType}, value={self.values[0]}, processed={self.processed}, ended={self.isEnded()}"
+        #return f'start={ISO8601_DT.toLocal_dt(self.startTime)}, end={ISO8601_DT.toLocal_dt(self.endTime)},(utc={self.startTime} to {self.endTime}), duration={self.duration}, type={self.payloadType}, value={self.values[0]}, processed={self.processed}, ended={self.isEnded()}'
+        return f'FROM:{ISO8601_DT.toLocal_dt(self.startTime)}, TO:{ISO8601_DT.toLocal_dt(self.endTime)}, DURATION:{self.duration}, NOTIFIED:{self.notified}, PROCESSED:{self.processed}, ENDED={self.isEnded()}, TYPE:{self.payloadType}, VALUE:{self.values[0]}'
 
     #we need this function to check whether timeseries are identical
     def __eq__(self, other):
