@@ -4,6 +4,8 @@ import json
 from .log import Oadr3LoggedException, oadr3_log_critical
 from .descriptors import EventPayloadDescriptor, ReportPayloadDescriptor
 from .interval import Interval, IntervalPeriod
+from .config import OADR3Config
+from .datetime_util import get_current_utc_time
 
 
 
@@ -181,7 +183,17 @@ class Events(list):
 
     except Exception as ex:
       oadr3_log_critical("failed appending events", True)
-      
+
+  def __createTestTimeSeries(self, sorted_ts:list):
+    """Changes the start times to start from _now_ and progress from there"""
+    if not sorted_ts:
+      return
+    current_time = get_current_utc_time()
+    first_elem_start_time = sorted_ts[0].getStartTime()
+    offset = (current_time - first_elem_start_time)
+    for ts_elem in sorted_ts:
+      ts_elem.updateStartTime(offset)
+    return sorted_ts
 
   def getTimeSeries(self):
     sorted_out=[]
@@ -191,6 +203,9 @@ class Events(list):
         out.extend(event.getTimeSeriesValues())
       #sort everything based on start time
       sorted_out = sorted(out, key=lambda x: x.getStartTime() )
+
+      if OADR3Config.events_start_now:
+        sorted_out = self.__createTestTimeSeries(sorted_out)
     except Exception as ex:
       oadr3_log_critical("failed sorting", True)
     return sorted_out

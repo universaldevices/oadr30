@@ -44,7 +44,7 @@ class IntervalPeriod(dict):
         '''
         try:
             iso_date = self['start']
-            iso = ISO8601_DT(datetime.now(timezone.utc)) if OADR3Config.events_start_now else ISO8601_DT(iso_date)
+            iso = ISO8601_DT(iso_date)
             randomized_start= self.getRandomizedStart()
             if randomized_start != 0:
                 iso.addSeconds(randomized_start, True)

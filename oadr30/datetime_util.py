@@ -78,6 +78,7 @@ class ISO8601_DT:
         except Exception as ex:
             return -1
 
+    
     def addSeconds(self, seconds_to_add, persist=False) :
     #    if seconds_to_add <= 0:
     #        return ISO8601_DT(self.dt)

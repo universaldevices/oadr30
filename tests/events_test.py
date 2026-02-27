@@ -53,5 +53,4 @@ def main(base_url:str, auth_url:str, client_id:str, client_secret:str, ven_name:
 
 
 if __name__ == "__main__":
-    main(VTN_Base_URL, Auth, Client_ID, Client_Secret, None)
- #   main(None, None, None, None, None)
+    main(None, None, None, None, None)

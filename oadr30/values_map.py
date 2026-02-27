@@ -7,6 +7,7 @@ from .log import oadr3_log_critical
 from .definitions import oadr3_alert_types, oadr3_reg_event_types, oadr3_cta2045_types
 from .datetime_util import ISO8601_DT, get_current_utc_time 
 from zoneinfo import ZoneInfo
+from datetime import timedelta
 
 class ValuesMap:
     """
@@ -60,14 +61,11 @@ class ValuesMap:
             self.eventType=None #regular events
             self.units = None
             self.currency = None
-            self.startTime=start_time.toUtc()
             self.duration=duration
-            self.endTime=start_time.addSeconds(duration).toUtc()
+            self.__recalcTimes(start_time.toUtc())
             self.processed=False #whether the scheduler has already processed 
             self.notified=False
 
-            ##to calculate the end time:
-            #endTime=startTime.addSeconds(duration)
             eventInfo = None
 
             if self.payloadType in oadr3_reg_event_types:
@@ -133,6 +131,16 @@ class ValuesMap:
         except Exception as ex:
             oadr3_log_critical(f"invalid values in the array: {ex}", True)
             return None
+
+    def __recalcTimes(self, start_time):
+        self.startTime=start_time
+        duration = timedelta(seconds=self.duration)
+        self.endTime=start_time+duration
+
+    def updateStartTime(self, offset:timedelta):
+        if not offset:
+            return
+        self.__recalcTimes(self.startTime+offset)
 
     def setNotified(self):
         self.notified=True
