@@ -10,6 +10,7 @@ import json
 from http import HTTPStatus
 from datetime import datetime, timedelta
 from typing import Literal
+from urllib.parse import quote_plus
 
 OADR3_EVENT_BASE_URL = '/events'
 OADR3_PROGRAM_BASE_URL = '/programs'
@@ -33,8 +34,8 @@ class VTNOps():
 
         self.base_url=base_url
         self.auth_url= auth_url if (auth_url.startswith('http') or auth_url.startswith('https')) else self.base_url + auth_url
-        self.client_id = client_id
-        self.client_secret= client_secret
+        self.client_id = quote_plus(client_id)
+        self.client_secret= quote_plus(client_secret)
         self.token = None
         self.auth_token_url_is_json = auth_token_url_is_json
 
