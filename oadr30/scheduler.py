@@ -1,6 +1,6 @@
 #Universal Devices
 #MIT License
-import threading
+import threading, time
 from datetime import timedelta
 from .values_map import ValuesMap
 from .datetime_util import get_current_utc_time
@@ -46,6 +46,7 @@ class SchedulerControl():
 
     def stop(self):
         self.stop_event.set()  # Set the stop event to signal the thread to stop
+        time.sleep(0.5)
         self.start_event.clear()  # Clear the start event
 
     def is_start_set(self):

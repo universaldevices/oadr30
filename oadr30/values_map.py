@@ -137,10 +137,10 @@ class ValuesMap:
         duration = timedelta(seconds=self.duration)
         self.endTime=start_time+duration
 
-    def updateStartTime(self, offset:timedelta):
-        if not offset:
+    def updateStartTime(self, start_time):
+        if not start_time:
             return
-        self.__recalcTimes(self.startTime+offset)
+        self.__recalcTimes(start_time)
 
     def setNotified(self):
         self.notified=True

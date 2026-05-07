@@ -189,10 +189,10 @@ class Events(list):
     if not sorted_ts:
       return
     current_time = get_current_utc_time()
-    first_elem_start_time = sorted_ts[0].getStartTime()
-    offset = (current_time - first_elem_start_time)
+    next_start_time = get_current_utc_time() 
     for ts_elem in sorted_ts:
-      ts_elem.updateStartTime(offset)
+      ts_elem.updateStartTime(next_start_time)
+      next_start_time=ts_elem.getEndTime()
     return sorted_ts
 
   def getTimeSeries(self):
